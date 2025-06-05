@@ -1,0 +1,7 @@
+{
+    "servers": {
+        "Search": {
+            "url": "http://localhost:3003/mcp"
+        }
+    }
+}

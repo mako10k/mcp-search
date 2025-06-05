@@ -1,0 +1,23 @@
+{
+    "name": "mcp-search",
+    "version": "1.0.0",
+    "description": "A project for Google search functionality using MCP.",
+    "main": "dist/index.js",
+    "scripts": {
+        "start": "node dist/index.js",
+        "build": "tsc",
+        "dev": "ts-node src/index.ts"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.12.1",
+        "axios": "^1.4.0",
+        "dotenv": "^16.5.0",
+        "express": "^5.1.0",
+        "zod": "^3.25.51"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.2",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.2.2"
+    }
+}
