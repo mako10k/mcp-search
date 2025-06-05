@@ -15,7 +15,7 @@ const server = new McpServer({
 });
 
 server.tool(
-    "search",
+    "google-search",
     "Perform a web search using Google Custom Search API for efficient results.",
     SearchParamsSchema.shape, // Revert to using .shape for compatibility
     async (params) => {
