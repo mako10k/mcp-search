@@ -1,9 +1,8 @@
 import express from "express";
-import { googleSearch } from "./google-search";
+import { searchEngine, SearchParamsSchema } from "./search";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import dotenv from "dotenv";
-import z from "zod";
 
 dotenv.config();
 
@@ -16,14 +15,12 @@ const server = new McpServer({
 });
 
 server.tool(
-    "googleSearch",
-    "Perform a Google search",
-    {
-        query: z.string().describe("The search query to perform on Google"),
-    },
+    "search",
+    "Perform a web search using Google Custom Search API for efficient results.",
+    SearchParamsSchema.shape, // Revert to using .shape for compatibility
     async (params) => {
-        const { query } = params;
-        const results = await googleSearch(query);
+        const validatedParams = SearchParamsSchema.parse(params);
+        const results = await searchEngine(validatedParams);
         return {
             content: results.map((item) => ({
                 type: "text",
