@@ -21,12 +21,24 @@ server.tool(
     async (params) => {
         const validatedParams = SearchParamsSchema.parse(params);
         const results = await searchEngine(validatedParams);
-        return {
-            content: results.map((item) => ({
-                type: "text",
-                text: JSON.stringify(item),
-            })),
-        };
+
+        if (Array.isArray(results)) {
+            return {
+                content: results.map((item) => ({
+                    type: "text",
+                    text: JSON.stringify(item),
+                })),
+            };
+        } else if (results.error) {
+            return {
+                content: [{
+                    type: "text",
+                    text: `Error: ${results.message} (Status: ${results.status || "unknown"})`,
+                }],
+            };
+        } else {
+            throw new Error("Unexpected response format.");
+        }
     }
 );
 

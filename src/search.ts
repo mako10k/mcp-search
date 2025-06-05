@@ -33,13 +33,32 @@ const SearchParamsSchema = z.object({
         .describe("Specify the dominant color of images to return (e.g., black, white, red)."),
 });
 
-export async function searchEngine(params: z.infer<typeof SearchParamsSchema>): Promise<any[]> {
+export async function searchEngine(params: z.infer<typeof SearchParamsSchema>): Promise<any[] | { error: boolean; status?: number; message: string }> {
     const { query, language, region, numResults, startIndex, imageSearch, imageSize, imageType, imageColor } = params;
+
+    // Input validation
+    if (!query || typeof query !== "string" || query.trim() === "") {
+        throw new Error("Query parameter is required and must be a non-empty string.");
+    }
+
     if (numResults && (numResults < 1 || numResults > 10)) {
         throw new Error("numResults must be between 1 and 10.");
     }
+
     if (startIndex && (startIndex < 1 || startIndex > 100 - (numResults || 10))) {
-        throw new Error("startIndex must be between 1 and (100 - numResults).");
+        throw new Error("startIndex must be between 1 and (100 - numResults). Ensure the value is within the valid range.");
+    }
+
+    if (imageSize && !["small", "medium", "large"].includes(imageSize)) {
+        throw new Error("Invalid imageSize parameter. Allowed values are 'small', 'medium', 'large'.");
+    }
+
+    if (imageType && !["clipart", "photo", "lineart"].includes(imageType)) {
+        throw new Error("Invalid imageType parameter. Allowed values are 'clipart', 'photo', 'lineart'.");
+    }
+
+    if (imageColor && !["black", "white", "red", "blue", "green", "yellow"].includes(imageColor)) {
+        throw new Error("Invalid imageColor parameter. Allowed values are 'black', 'white', 'red', 'blue', 'green', 'yellow'.");
     }
 
     const googleApiKey = process.env.GOOGLE_API_KEY;
@@ -88,9 +107,56 @@ export async function searchEngine(params: z.infer<typeof SearchParamsSchema>): 
 
     try {
         const response = await axios.get(url.toString());
+
+        // Check if response format is valid
+        if (!response.data.items || !Array.isArray(response.data.items)) {
+            console.error("Invalid response format detected:", {
+                status: response.status,
+                data: response.data,
+            });
+
+            if (response.data.searchInformation?.totalResults === "0") {
+                return {
+                    error: true,
+                    status: response.status,
+                    message: "No results found for the query. Consider refining your search terms.",
+                };
+            }
+
+            if (response.data.spelling?.correctedQuery) {
+                return {
+                    error: true,
+                    status: response.status,
+                    message: `No results found. Did you mean: ${response.data.spelling.correctedQuery}?`,
+                };
+            }
+
+            return {
+                error: true,
+                status: response.status,
+                message: "Invalid response format: items must be an array. Please verify the query parameters and ensure the Programmable Search Engine is correctly configured.",
+            };
+        }
+
         return response.data.items;
     } catch (error: any) {
-        throw new Error(`Failed to fetch search results: ${error.message}`);
+        if (error.response) {
+            console.error("API error response:", {
+                status: error.response.status,
+                data: error.response.data,
+            });
+            return {
+                error: true,
+                status: error.response.status,
+                message: error.response.data.error?.message || "Unknown error from API. Please check the API key, CX, and query parameters.",
+            };
+        } else {
+            console.error("Network or server error:", error.message);
+            return {
+                error: true,
+                message: `Network or server error: ${error.message}. Please ensure the server is reachable and the network connection is stable.`,
+            };
+        }
     }
 }
 
