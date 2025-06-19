@@ -2,7 +2,16 @@ import express from "express";
 import { searchEngine, SearchParamsSchema } from "./search";
 import { getSearchResult } from "./getSearchResult";
 import { listSearchCache } from "./listSearchCache";
-import { GetSearchResultParamsSchema, ListSearchCacheParamsSchema } from "./types";
+import { fetchUrl } from "./fetch";
+import { listFetchCache } from "./listFetchCache";
+import { getFetchCache } from "./getFetchCache";
+import { 
+    GetSearchResultParamsSchema, 
+    ListSearchCacheParamsSchema,
+    FetchParamsSchema,
+    ListFetchCacheParamsSchema,
+    GetFetchCacheParamsSchema
+} from "./types";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import dotenv from "dotenv";
@@ -131,6 +140,115 @@ server.tool(
             };
         } else {
             logger.info(`Search cache retrieved: ${(result as any).searches?.length || 0}/${(result as any).totalCount || 0} entries`);
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify(result),
+                }],
+            };
+        }
+    }
+);
+
+// ウェブフェッチツール
+server.tool(
+    "fetch",
+    "Fetch content from a specified URL with customizable options and caching.",
+    {
+        url: FetchParamsSchema.shape.url,
+        method: FetchParamsSchema.shape.method,
+        headers: FetchParamsSchema.shape.headers,
+        windowSize: FetchParamsSchema.shape.windowSize,
+        timeout: FetchParamsSchema.shape.timeout,
+        includeResponseHeaders: FetchParamsSchema.shape.includeResponseHeaders,
+    },
+    async (params) => {
+        logger.info("Fetch requested:", { url: params.url, method: params.method });
+        
+        const validatedParams = FetchParamsSchema.parse(params);
+        const result = await fetchUrl(validatedParams);
+
+        if ("error" in result && result.error) {
+            logger.info("Fetch error:", (result as any).message);
+            return {
+                content: [{
+                    type: "text",
+                    text: `Error: ${(result as any).message}`,
+                }],
+            };
+        } else {
+            logger.info(`Fetch completed: ${(result as any).requestId}, status: ${(result as any).status}`);
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify(result),
+                }],
+            };
+        }
+    }
+);
+
+// フェッチキャッシュ一覧ツール
+server.tool(
+    "list-fetch-cache",
+    "List cached fetch requests with their status and progress information.",
+    {
+        requestId: ListFetchCacheParamsSchema.shape.requestId,
+        page: ListFetchCacheParamsSchema.shape.page,
+        limit: ListFetchCacheParamsSchema.shape.limit,
+    },
+    async (params) => {
+        logger.info("Fetch cache list requested", params);
+        
+        const validatedParams = ListFetchCacheParamsSchema.parse(params);
+        const result = await listFetchCache(validatedParams);
+
+        if ("error" in result && result.error) {
+            logger.info("Fetch cache list error:", result.message);
+            return {
+                content: [{
+                    type: "text",
+                    text: `Error: ${result.message}`,
+                }],
+            };
+        } else {
+            logger.info(`Fetch cache retrieved: ${(result as any).requests?.length || 0}/${(result as any).totalCount || 0} entries`);
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify(result),
+                }],
+            };
+        }
+    }
+);
+
+// フェッチキャッシュデータ取得ツール
+server.tool(
+    "get-fetch-cache",
+    "Retrieve cached fetch data with byte-level pagination support.",
+    {
+        requestId: GetFetchCacheParamsSchema.shape.requestId,
+        includeHeaders: GetFetchCacheParamsSchema.shape.includeHeaders,
+        startPosition: GetFetchCacheParamsSchema.shape.startPosition,
+        size: GetFetchCacheParamsSchema.shape.size,
+    },
+    async (params) => {
+        logger.info("Fetch cache data requested:", params);
+        
+        const validatedParams = GetFetchCacheParamsSchema.parse(params);
+        const result = await getFetchCache(validatedParams);
+
+        if ("error" in result && result.error) {
+            logger.info("Fetch cache data error:", result.message);
+            return {
+                content: [{
+                    type: "text",
+                    text: `Error: ${result.message}`,
+                }],
+            };
+        } else {
+            logger.info(`Fetch cache data retrieved: ${(result as any).dataSize} bytes`);
             return {
                 content: [{
                     type: "text",
