@@ -3,6 +3,10 @@
 import * as path from 'path';
 import { spawn } from 'child_process';
 import * as fs from 'fs';
+import * as dotenv from 'dotenv';
+
+// .envファイルを読み込み
+dotenv.config();
 
 // メイン実行ファイルのパス
 const mainScript = path.join(__dirname, 'index.js');
