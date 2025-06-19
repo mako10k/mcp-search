@@ -1,12 +1,36 @@
 {
-    "name": "mcp-search",
+    "name": "google-search-mcp",
     "version": "1.0.0",
-    "description": "A project for Google search functionality using MCP.",
+    "description": "A Google Custom Search and Web Fetch MCP Server with comprehensive caching capabilities.",
     "main": "dist/index.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mako10k/mcp-search.git"
+    },
+    "homepage": "https://github.com/mako10k/mcp-search",
+    "bugs": {
+        "url": "https://github.com/mako10k/mcp-search/issues"
+    },
+    "bin": {
+        "mcp-search": "./dist/cli.js"
+    },
+    "files": [
+        "dist/**/*",
+        "README.md",
+        ".env.example"
+    ],
+    "keywords": [
+        "mcp",
+        "google-search",
+        "web-fetch",
+        "cache",
+        "model-context-protocol"
+    ],
     "scripts": {
         "start": "node dist/index.js",
         "build": "tsc",
-        "dev": "ts-node src/index.ts"
+        "dev": "ts-node src/index.ts",
+        "prepublishOnly": "npm run build"
     },
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.12.1",

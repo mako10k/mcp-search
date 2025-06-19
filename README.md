@@ -1,28 +1,64 @@
 # MCP Search
 
-A project2. Set up environment variables by copying the example file:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Then edit `.env` with your actual values:
-   ```
-   GOOGLE_API_KEY=your_actual_google_api_key
-   GOOGLE_CX=your_actual_google_cx_id
-   PORT=3000
-   MAX_FILE_SIZE=4194304
-   MAX_TOTAL_CACHE_SIZE=104857600
-   ```
-   
-   Environment variables:
-   - `GOOGLE_API_KEY`: Your Google Custom Search API key (required)
-     - Get from: https://developers.google.com/custom-search/v1/introduction
-   - `GOOGLE_CX`: Your Google Custom Search Engine ID (required)
-     - Create and get from: https://cse.google.com/
-   - `PORT`: Server port (default: 3000)
-   - `MAX_FILE_SIZE`: Maximum size per fetch request in bytes (default: 4MB = 4194304 bytes)
-   - `MAX_TOTAL_CACHE_SIZE`: Maximum total cache size in bytes (default: 100MB = 104857600 bytes)
-     Note: These control internal cache limits, separate from model data window sizes.earch functionality and web fetch capabilities using MCP.
+A powerful Google Custom Search and Web Fetch MCP (Model Context Protocol) server that provides search functionality and web fetch capabilities using MCP.
+
+## Quick Start
+
+The easiest way to get started is using npx:
+
+```bash
+# Set up environment variables first
+export GOOGLE_API_KEY="your_google_api_key"
+export GOOGLE_CX="your_google_cx_id"
+
+# Run the MCP server
+npx mcp-search
+```
+
+You can also specify a custom port:
+```bash
+npx mcp-search --port 8080
+```
+
+Or start with verbose logging:
+```bash
+npx mcp-search --verbose
+```
+
+For command help:
+```bash
+npx mcp-search --help
+```
+
+### Using npx Command
+
+The `mcp-search` package can be run directly using npx without installation:
+
+```bash
+npx mcp-search [options]
+```
+
+**Command Options:**
+- `--port <number>`: Specify the server port (default: 3000)
+- `--verbose`: Enable verbose logging
+- `--help`: Show help information
+- `--version`: Show version information
+
+**Examples:**
+```bash
+# Basic usage with environment variables
+export GOOGLE_API_KEY="your_key"
+export GOOGLE_CX="your_cx"
+npx mcp-search
+
+# Custom port with verbose logging
+npx mcp-search --port 8080 --verbose
+
+# One-liner with environment variables
+GOOGLE_API_KEY="your_key" GOOGLE_CX="your_cx" npx mcp-search
+```
+
+The server will start and listen for MCP connections on the specified port.
 
 ## Features
 
@@ -36,37 +72,71 @@ A project2. Set up environment variables by copying the example file:
 - **list-fetch-cache**: List cached fetch requests
 - **get-fetch-cache**: Retrieve cached fetch data with pagination
 
-## Setup
+## Installation & Setup
 
-1. Install dependencies:
+### Option 1: Using npx (Recommended)
+
+1. Set up environment variables:
    ```bash
+   export GOOGLE_API_KEY="your_google_api_key"
+   export GOOGLE_CX="your_google_cx_id"
+   ```
+
+2. Run the server:
+   ```bash
+   npx mcp-search
+   ```
+
+### Option 2: Local Development
+
+1. Clone and install dependencies:
+   ```bash
+   git clone https://github.com/mako10k/mcp-search
+   cd mcp-search
    npm install
    ```
 
-2. Set up environment variables in a `.env` file:
-   ```
-   GOOGLE_API_KEY=your_google_api_key
-   GOOGLE_CX=your_google_cx
-   PORT=3000
-   MAX_FETCH_SIZE=4194304
+2. Set up environment variables by copying the example file:
+   ```bash
+   cp .env.example .env
    ```
    
-   Environment variables:
-   - `GOOGLE_API_KEY`: Your Google Custom Search API key
-   - `GOOGLE_CX`: Your Google Custom Search Engine ID
-   - `PORT`: Server port (default: 3000)
-   - `MAX_FETCH_SIZE`: Maximum fetch data size for caching in bytes (default: 4MB = 4194304 bytes)
-     Note: This controls the internal cache size limit, not the model data window size.
+   Then edit `.env` with your actual values:
+   ```
+   GOOGLE_API_KEY=your_actual_google_api_key
+   GOOGLE_CX=your_actual_google_cx_id
+   PORT=3000
+   MAX_FILE_SIZE=4194304
+   MAX_TOTAL_CACHE_SIZE=104857600
+   ```
 
-3. Build the project:
+3. Build and run:
    ```bash
    npm run build
-   ```
-
-4. Run the project:
-   ```bash
    npm start
    ```
+
+### Environment Variables
+
+- `GOOGLE_API_KEY`: Your Google Custom Search API key (required)
+  - Get from: https://developers.google.com/custom-search/v1/introduction
+- `GOOGLE_CX`: Your Google Custom Search Engine ID (required)
+  - Create and get from: https://cse.google.com/
+- `PORT`: Server port (default: 3000)
+- `MAX_FILE_SIZE`: Maximum size per fetch request in bytes (default: 4MB = 4194304 bytes)
+- `MAX_TOTAL_CACHE_SIZE`: Maximum total cache size in bytes (default: 100MB = 104857600 bytes)
+
+Note: These control internal cache limits, separate from model data window sizes.
+
+## Package Information
+
+This package is published to npm as `google-search-mcp` and can be used in the following ways:
+
+- **Direct execution with npx**: `npx mcp-search`
+- **Global installation**: `npm install -g google-search-mcp && mcp-search`
+- **Local dependency**: `npm install google-search-mcp`
+
+The package includes TypeScript definitions and supports both CommonJS and ES modules.
 
 ## Development
 
