@@ -2,34 +2,35 @@ import axios from "axios";
 import dotenv from "dotenv";
 import { z } from "zod";
 import winston from "winston";
+import { cacheManager, SearchResponse } from "./cache";
 
 dotenv.config();
 
 const SearchParamsSchema = z.object({
-    q: z.string()
+    query: z.string()
         .describe("The search query to perform"),
-    lr: z.enum(["en", "ja", "es", "fr", "de", "zh", "ru", "ar", "pt", "it"])
+    language: z.enum(["en", "ja", "es", "fr", "de", "zh", "ru", "ar", "pt", "it"])
         .optional()
         .describe("The language for the search results (ISO 639-1 codes). Should only be used if explicitly requested by the user or deemed necessary by the AI model."),
-    cr: z.enum(["US", "JP", "ES", "FR", "DE", "CN", "RU", "AR", "BR", "IT"])
+    region: z.enum(["US", "JP", "ES", "FR", "DE", "CN", "RU", "AR", "BR", "IT"])
         .optional()
         .describe("The region for the search results (ISO 3166-1 alpha-2 codes). Should only be used for region-specific software development or when explicitly requested by the user."),
-    num: z.number()
+    numResults: z.number()
         .optional()
         .describe("The number of search results to return (1..10)."),
-    start: z.number()
+    startIndex: z.number()
         .optional()
-        .describe("The starting index for search results (1..(100-num))."),
-    searchType: z.enum(["web", "image"])
+        .describe("The starting index for search results (1..(100-numResults))."),
+    imageSearch: z.boolean()
         .optional()
-        .describe("Specify the type of search to perform (web or image)."),
-    imgSize: z.enum(["small", "medium", "large"])
+        .describe("Enable image search mode. If true, the search will return image results."),
+    imageSize: z.enum(["small", "medium", "large"])
         .optional()
         .describe("Specify the size of images to return (small, medium, large)."),
-    imgType: z.enum(["clipart", "photo", "lineart"])
+    imageType: z.enum(["clipart", "photo", "lineart"])
         .optional()
         .describe("Specify the type of images to return (clipart, photo, lineart)."),
-    imgColorType: z.enum(["black", "white", "red", "blue", "green", "yellow"])
+    imageColor: z.enum(["black", "white", "red", "blue", "green", "yellow"])
         .optional()
         .describe("Specify the dominant color of images to return (e.g., black, white, red)."),
 });
@@ -47,32 +48,32 @@ const logger = winston.createLogger({
     ],
 });
 
-export async function searchEngine(params: z.infer<typeof SearchParamsSchema>): Promise<any[] | { error: boolean; status?: number; message: string }> {
-    const { q, lr, cr, num, start, searchType, imgSize, imgType, imgColorType } = params;
+export async function searchEngine(params: z.infer<typeof SearchParamsSchema>): Promise<SearchResponse | { error: boolean; status?: number; message: string }> {
+    const { query, language, region, numResults, startIndex, imageSearch, imageSize, imageType, imageColor } = params;
 
     // Input validation
-    if (!q || typeof q !== "string" || q.trim() === "") {
+    if (!query || typeof query !== "string" || query.trim() === "") {
         throw new Error("Query parameter is required and must be a non-empty string.");
     }
 
-    if (num && (num < 1 || num > 10)) {
-        throw new Error("num must be between 1 and 10.");
+    if (numResults && (numResults < 1 || numResults > 10)) {
+        throw new Error("numResults must be between 1 and 10.");
     }
 
-    if (start && (start < 1 || start > 100 - (num || 10))) {
-        throw new Error("start must be between 1 and (100 - num). Ensure the value is within the valid range.");
+    if (startIndex && (startIndex < 1 || startIndex > 100 - (numResults || 10))) {
+        throw new Error("startIndex must be between 1 and (100 - numResults). Ensure the value is within the valid range.");
     }
 
-    if (imgSize && !["small", "medium", "large"].includes(imgSize)) {
-        throw new Error("Invalid imgSize parameter. Allowed values are 'small', 'medium', 'large'.");
+    if (imageSize && !["small", "medium", "large"].includes(imageSize)) {
+        throw new Error("Invalid imageSize parameter. Allowed values are 'small', 'medium', 'large'.");
     }
 
-    if (imgType && !["clipart", "photo", "lineart"].includes(imgType)) {
-        throw new Error("Invalid imgType parameter. Allowed values are 'clipart', 'photo', 'lineart'.");
+    if (imageType && !["clipart", "photo", "lineart"].includes(imageType)) {
+        throw new Error("Invalid imageType parameter. Allowed values are 'clipart', 'photo', 'lineart'.");
     }
 
-    if (imgColorType && !["black", "white", "red", "blue", "green", "yellow"].includes(imgColorType)) {
-        throw new Error("Invalid imgColorType parameter. Allowed values are 'black', 'white', 'red', 'blue', 'green', 'yellow'.");
+    if (imageColor && !["black", "white", "red", "blue", "green", "yellow"].includes(imageColor)) {
+        throw new Error("Invalid imageColor parameter. Allowed values are 'black', 'white', 'red', 'blue', 'green', 'yellow'.");
     }
 
     const googleApiKey = process.env.GOOGLE_API_KEY;
@@ -83,40 +84,40 @@ export async function searchEngine(params: z.infer<typeof SearchParamsSchema>): 
     }
 
     const url = new URL("https://www.googleapis.com/customsearch/v1");
-    url.searchParams.append("q", q);
+    url.searchParams.append("q", query);
     url.searchParams.append("key", googleApiKey);
     url.searchParams.append("cx", googleCx);
 
-    if (lr) {
-        url.searchParams.append("lr", `lang_${lr}`);
+    if (language) {
+        url.searchParams.append("lr", `lang_${language}`);
     }
 
-    if (cr) {
-        url.searchParams.append("cr", `country${cr}`);
+    if (region) {
+        url.searchParams.append("cr", `country${region}`);
     }
 
-    if (num) {
-        url.searchParams.append("num", num.toString());
+    if (numResults) {
+        url.searchParams.append("num", numResults.toString());
     }
 
-    if (start) {
-        url.searchParams.append("start", start.toString());
+    if (startIndex) {
+        url.searchParams.append("start", startIndex.toString());
     }
 
-    if (searchType) {
-        url.searchParams.append("searchType", searchType);
+    if (imageSearch) {
+        url.searchParams.append("searchType", "image");
     }
 
-    if (imgSize) {
-        url.searchParams.append("imgSize", imgSize);
+    if (imageSize) {
+        url.searchParams.append("imgSize", imageSize);
     }
 
-    if (imgType) {
-        url.searchParams.append("imgType", imgType);
+    if (imageType) {
+        url.searchParams.append("imgType", imageType);
     }
 
-    if (imgColorType) {
-        url.searchParams.append("imgColorType", imgColorType);
+    if (imageColor) {
+        url.searchParams.append("imgColorType", imageColor);
     }
 
     try {
@@ -155,7 +156,11 @@ export async function searchEngine(params: z.infer<typeof SearchParamsSchema>): 
             };
         }
 
-        return response.data.items;
+        // キャッシュに保存して概要応答を返す
+        const searchResponse = cacheManager.store(query, response.data.items);
+        logger.info(`Search completed: ${searchResponse.resultCount} results cached with ID ${searchResponse.searchId}`);
+        
+        return searchResponse;
     } catch (error: any) {
         if (error.response) {
             logger.warn("API error response:", {
