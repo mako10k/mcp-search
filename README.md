@@ -4,25 +4,48 @@ A powerful Google Custom Search and Web Fetch MCP (Model Context Protocol) serve
 
 ## Quick Start
 
-The easiest way to get started is using npx:
+### STDIO Mode (Default - Recommended for MCP)
+
+The easiest way to get started with MCP clients is using STDIO mode:
 
 ```bash
 # Set up environment variables first
 export GOOGLE_API_KEY="your_google_api_key"
 export GOOGLE_CX="your_google_cx_id"
 
-# Run the MCP server
+# Run the MCP server (STDIO mode is default)
 npx mcp-search
 ```
 
-You can also specify a custom port:
+### HTTP Mode (Alternative)
+
+For HTTP-based integration:
+
 ```bash
-npx mcp-search --port 8080
+# Start in HTTP mode
+npx mcp-search --http
+
+# Or with custom port
+npx mcp-search --http --port 8080
 ```
 
-Or start with verbose logging:
-```bash
-npx mcp-search --verbose
+### MCP Client Configuration
+
+**For STDIO transport (recommended):**
+```json
+{
+  "command": "npx",
+  "args": ["mcp-search"],
+  "type": "stdio"
+}
+```
+
+**For HTTP transport:**
+```json
+{
+  "url": "http://localhost:3000/mcp",
+  "type": "http"
+}
 ```
 
 For command help:
@@ -30,7 +53,7 @@ For command help:
 npx mcp-search --help
 ```
 
-### Using npx Command
+### Command Options
 
 The `mcp-search` package can be run directly using npx without installation:
 
@@ -38,21 +61,25 @@ The `mcp-search` package can be run directly using npx without installation:
 npx mcp-search [options]
 ```
 
-**Command Options:**
-- `--port <number>`: Specify the server port (default: 3000)
-- `--verbose`: Enable verbose logging
+**Transport Options:**
+- Default: STDIO mode (recommended for MCP clients)
+- `--http`: Enable HTTP mode with /mcp endpoint
+
+**Configuration Options:**
+- `--port <number>`: Specify the server port for HTTP mode (default: 3000)
 - `--help`: Show help information
 - `--version`: Show version information
 
 **Examples:**
 ```bash
-# Basic usage with environment variables
-export GOOGLE_API_KEY="your_key"
-export GOOGLE_CX="your_cx"
+# STDIO mode (default)
 npx mcp-search
 
-# Custom port with verbose logging
-npx mcp-search --port 8080 --verbose
+# HTTP mode
+npx mcp-search --http
+
+# HTTP mode with custom port
+npx mcp-search --http --port 8080
 
 # One-liner with environment variables
 GOOGLE_API_KEY="your_key" GOOGLE_CX="your_cx" npx mcp-search
@@ -72,6 +99,63 @@ The server will start and listen for MCP connections on the specified port.
 - **list-fetch-cache**: List cached fetch requests
 - **get-fetch-cache**: Retrieve cached fetch data with pagination
 
+## MCP Configuration Examples
+
+### VS Code MCP Configuration
+
+Add to your `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "mcp-search": {
+      "command": "npx",
+      "args": ["mcp-search"],
+      "type": "stdio",
+      "env": {
+        "GOOGLE_API_KEY": "your_google_api_key",
+        "GOOGLE_CX": "your_google_cx_id"
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop Configuration
+
+Add to your Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "mcp-search": {
+      "command": "npx",
+      "args": ["mcp-search"],
+      "env": {
+        "GOOGLE_API_KEY": "your_google_api_key",
+        "GOOGLE_CX": "your_google_cx_id"
+      }
+    }
+  }
+}
+```
+
+### Cursor IDE Configuration
+
+Add to your MCP configuration:
+
+```json
+{
+  "servers": {
+    "search": {
+      "command": "npx",
+      "args": ["mcp-search"],
+      "type": "stdio"
+    }
+  }
+}
+```
+
 ## Installation & Setup
 
 ### Option 1: Using npx (Recommended)
@@ -84,7 +168,11 @@ The server will start and listen for MCP connections on the specified port.
 
 2. Run the server:
    ```bash
+   # STDIO mode (default - recommended for MCP clients)
    npx mcp-search
+   
+   # OR HTTP mode (for custom integrations)
+   npx mcp-search --http
    ```
 
 ### Option 2: Local Development

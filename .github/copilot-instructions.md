@@ -1,3 +1,5 @@
-<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
+<!-- Workspace-specific Copilot instructions. See https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
-This project is designed for Google search functionality using MCP. Ensure that all generated code aligns with the MCP framework and uses the Google Custom Search API effectively.
+This project implements Google search features using the MCP framework. All code should follow MCP conventions and interact with the Google Custom Search API.
+
+For command execution, always use functions prefixed with mcp_shell_server_. Avoid run_in_terminal due to known issues.

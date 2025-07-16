@@ -1,7 +1,7 @@
 {
-    "name": "google-search-mcp",
-    "version": "1.0.0",
-    "description": "A Google Custom Search and Web Fetch MCP Server with comprehensive caching capabilities.",
+    "name": "mcp-search",
+    "version": "2.0.0",
+    "description": "A Model Context Protocol (MCP) server for Google Custom Search and Web Fetch with comprehensive caching capabilities. Supports both STDIO and HTTP transports.",
     "main": "dist/index.js",
     "repository": {
         "type": "git",

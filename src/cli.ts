@@ -17,15 +17,20 @@ const args = process.argv.slice(2);
 // ヘルプメッセージ
 function showHelp() {
     console.log(`
-Google Search MCP Server
+MCP Search Server
 
 Usage:
   npx mcp-search [options]
 
 Options:
-  --port <port>     Set server port (default: 3000)
+  --http           Start in HTTP mode (default: STDIO mode)
+  --port <port>    Set server port for HTTP mode (default: 3000)
   --help           Show this help message
   --version        Show version
+
+Transport Modes:
+  STDIO (default)  Model Context Protocol via standard input/output
+  HTTP             HTTP server mode with /mcp endpoint
 
 Environment Variables:
   GOOGLE_API_KEY           Google Custom Search API key (required)
@@ -35,9 +40,23 @@ Environment Variables:
   MAX_TOTAL_CACHE_SIZE    Max total cache size (default: 100MB)
 
 Examples:
-  npx mcp-search
-  npx mcp-search --port 8080
-  PORT=8080 npx mcp-search
+  npx mcp-search                    # Start in STDIO mode (default)
+  npx mcp-search --http             # Start in HTTP mode
+  npx mcp-search --http --port 8080 # HTTP mode with custom port
+  PORT=8080 npx mcp-search --http   # HTTP mode with environment port
+
+MCP Client Configuration (STDIO):
+  {
+    "command": "npx",
+    "args": ["mcp-search"],
+    "type": "stdio"
+  }
+
+MCP Client Configuration (HTTP):
+  {
+    "url": "http://localhost:3000/mcp",
+    "type": "http"
+  }
 
 Tools available:
   - google-search: Execute Google Custom Search with caching
@@ -61,9 +80,9 @@ function showVersion() {
     try {
         const packageJsonPath = path.join(__dirname, '../package.json');
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-        console.log(`google-search-mcp v${packageJson.version}`);
+        console.log(`mcp-search v${packageJson.version}`);
     } catch (error) {
-        console.log('google-search-mcp');
+        console.log('mcp-search');
     }
 }
 
@@ -78,11 +97,13 @@ if (args.includes('--version') || args.includes('-v')) {
     process.exit(0);
 }
 
-// ポート設定
+// ポート設定とHTTPモード判定
 let portIndex = args.indexOf('--port');
 if (portIndex !== -1 && args[portIndex + 1]) {
     process.env.PORT = args[portIndex + 1];
 }
+
+const httpMode = args.includes('--http');
 
 // メインスクリプトが存在するかチェック
 if (!fs.existsSync(mainScript)) {
@@ -97,12 +118,19 @@ if (!process.env.GOOGLE_API_KEY || !process.env.GOOGLE_CX) {
     console.warn('');
 }
 
-console.log('Starting Google Search MCP Server...');
-console.log(`Port: ${process.env.PORT || 3000}`);
+if (httpMode) {
+    console.log('Starting MCP Search Server in HTTP mode...');
+    console.log(`Port: ${process.env.PORT || 3000}`);
+} else {
+    console.log('Starting MCP Search Server in STDIO mode...');
+}
 console.log('');
 
+// 引数を準備（--httpがある場合は渡す）
+const serverArgs = httpMode ? ['--http'] : [];
+
 // メインスクリプトを実行
-const child = spawn('node', [mainScript], {
+const child = spawn('node', [mainScript, ...serverArgs], {
     stdio: 'inherit',
     env: process.env
 });
