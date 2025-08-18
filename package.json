@@ -39,7 +39,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "deadcode": "ts-prune -p tsconfig.json",
-    "duplicates": "jscpd --reporters console --threshold 0 --silent",
+  "duplicates": "jscpd -c .jscpd.json src",
     "depcheck": "depcheck",
     "prepublishOnly": "npm run build"
   },

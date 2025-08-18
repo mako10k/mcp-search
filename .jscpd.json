@@ -1,0 +1,13 @@
+{
+  "reporters": ["console"],
+  "threshold": 0,
+  "silent": true,
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/data/**",
+    "**/logs/**",
+    "**/.git/**",
+    "**/coverage/**"
+  ]
+}
