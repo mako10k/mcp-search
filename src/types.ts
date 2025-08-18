@@ -3,6 +3,12 @@ import { z } from 'zod';
 // get-search-result tool用のパラメータ（resultIdのみ）
 export const GetSearchResultParamsSchema = z.object({
   resultId: z.string().describe('The result ID to retrieve a specific search result'),
+  resourceUri: z
+    .string()
+    .optional()
+    .describe(
+      'Optional resource URI like search-result://{resultId} (takes precedence when provided)',
+    ),
 });
 
 export type GetSearchResultParams = z.infer<typeof GetSearchResultParamsSchema>;
@@ -176,6 +182,10 @@ export type ListFetchCacheParams = z.infer<typeof ListFetchCacheParamsSchema>;
 export const GetFetchCacheParamsSchema = z
   .object({
     requestId: z.string().describe('Request ID to retrieve'),
+    resourceUri: z
+      .string()
+      .optional()
+      .describe('Optional resource URI like fetch://{requestId} (takes precedence when provided)'),
     includeHeaders: z
       .boolean()
       .optional()

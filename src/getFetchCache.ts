@@ -4,9 +4,11 @@ import { logger } from './logger';
 
 // using simple stderr logger
 
-export async function getFetchCache(params: GetFetchCacheParams) {
+export async function getFetchCache(
+  params: GetFetchCacheParams & { resourceUri?: unknown; viewMode?: 'summary' | 'full' },
+) {
   const {
-    requestId,
+    requestId: requestIdRaw,
     includeHeaders,
     mode = 'text',
     startPosition,
@@ -23,7 +25,22 @@ export async function getFetchCache(params: GetFetchCacheParams) {
     before,
     after,
     maxMatches,
+    viewMode,
   } = params;
+
+  // Derive requestId from resourceUri if provided and requestId missing
+  let requestId = requestIdRaw;
+  if (!requestId && params.resourceUri) {
+    const uri = String(params.resourceUri as string);
+    try {
+      const u = new URL(uri);
+      if (u.protocol.startsWith('fetch')) {
+        requestId = u.host || u.pathname.replace(/^\/+/, '');
+      }
+    } catch {
+      requestId = uri.replace(/^fetch:\/\//, '').replace(/^\/+/, '');
+    }
+  }
 
   try {
     logger.info(`Retrieving fetch cache data: ${requestId}`, {
@@ -36,9 +53,9 @@ export async function getFetchCache(params: GetFetchCacheParams) {
       mode === 'rawChunk'
         ? fetchCacheManager.getFetchData(requestId, includeHeaders, startPosition, size)
         : fetchCacheManager.getProcessedView(requestId, {
-            outputSize,
+            outputSize: viewMode === 'full' ? Number.MAX_SAFE_INTEGER : outputSize,
             process,
-            summarize,
+            summarize: viewMode === 'summary' ? true : summarize,
             summaryMaxSentences,
             summaryMaxChars,
             search,
