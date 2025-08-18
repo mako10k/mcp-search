@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import winston from "winston";
 import { MAX_FILE_SIZE, MAX_TOTAL_CACHE_SIZE } from "./config";
+import { detectKind, toText, summarizeText, grepLike, GrepMatch } from "./contentProcessing";
 
 const logger = winston.createLogger({
     level: "info",
@@ -26,6 +27,7 @@ export interface FetchCache {
     status: "InProgress" | "Completed" | "Error";
     httpStatus?: number;
     statusText?: string;
+    contentType?: string;
     expectedSize?: number;
     fetchedSize: number;
     responseHeaders?: Record<string, string>;
@@ -39,10 +41,16 @@ export interface FetchResult {
     requestId: string;
     status: number;
     statusText: string;
+    contentType?: string;
     contentSize?: number;
     actualSize: number;
-    data: string;
-    isComplete: boolean;
+    processed: boolean;
+    textSize?: number;
+    data: string; // processed text slice
+    summary?: string;
+    matches?: GrepMatch[];
+    rawPreview?: string;
+    isComplete: boolean; // whether data contains the full processed text
     responseHeaders?: Record<string, string>;
     error?: string;
     errorCode?: string;
@@ -69,9 +77,24 @@ class FetchCacheManager {
         url: string,
         method: string = "GET",
         headers?: Record<string, string>,
-        windowSize: number = 4096,
+        outputSize: number = 4096,
         timeout: number = 30000,
-        includeResponseHeaders: boolean = false
+        includeResponseHeaders: boolean = false,
+        options?: {
+            process?: boolean;
+            summarize?: boolean;
+            summaryMaxSentences?: number;
+            summaryMaxChars?: number;
+            search?: string;
+            searchIsRegex?: boolean;
+            caseSensitive?: boolean;
+            context?: number;
+            before?: number;
+            after?: number;
+            maxMatches?: number;
+            includeRawPreview?: boolean;
+            rawPreviewSize?: number;
+        }
     ): Promise<FetchResult> {
         const requestId = uuidv4();
         const timestamp = new Date();
@@ -115,8 +138,8 @@ class FetchCacheManager {
 
             const httpStatus = response.status;
             const statusText = response.statusText;
-            const responseHeaders = includeResponseHeaders ? 
-                Object.fromEntries(response.headers.entries()) : undefined;
+            const allHeaders = Object.fromEntries(response.headers.entries());
+            const responseHeaders = includeResponseHeaders ? allHeaders : undefined;
 
             // ホスト名が要求したものと異なる場合はログおよび結果に注記
             let hostMismatchWarning: string | undefined;
@@ -134,6 +157,7 @@ class FetchCacheManager {
             // Content-Lengthからサイズを取得
             const contentLength = response.headers.get('content-length');
             const expectedSize = contentLength ? parseInt(contentLength, 10) : undefined;
+            const contentType = response.headers.get('content-type') || undefined;
 
             // レスポンスを読み取り
             const reader = response.body?.getReader();
@@ -201,6 +225,7 @@ class FetchCacheManager {
                 status: httpStatus >= 200 && httpStatus < 300 ? "Completed" : "Error",
                 httpStatus,
                 statusText,
+                contentType,
                 expectedSize,
                 fetchedSize,
                 responseHeaders,
@@ -219,20 +244,69 @@ class FetchCacheManager {
             const totalCacheSize = this.getTotalCacheSize();
             logger.info(`Cache updated. Total size: ${totalCacheSize} bytes (${(totalCacheSize / 1024 / 1024).toFixed(1)}MB), Entries: ${this.cache.size}`);
 
-            // レスポンスデータの一部を返す（windowSizeまで）
-            const dataToReturn = allData.slice(0, windowSize);
-            const isComplete = dataToReturn.length === allData.length;
+            // Content processing pipeline (processed text response by default)
+            const {
+                process = true,
+                summarize = true,
+                summaryMaxSentences = 3,
+                summaryMaxChars = 500,
+                search,
+                searchIsRegex = false,
+                caseSensitive = false,
+                context = 2,
+                before,
+                after,
+                maxMatches = 20,
+                includeRawPreview = false,
+                rawPreviewSize = 1024,
+            } = options || {};
+
+            const kind = detectKind(contentType);
+            let processedText = '';
+            let processed = false;
+            if (process) {
+                processedText = toText(Buffer.from(allData), kind);
+                processed = processedText.length > 0;
+            }
+            const textSize = processed ? processedText.length : undefined;
+            const textSlice = processed ? processedText.slice(0, outputSize) : '';
+            const isComplete = processed ? (textSlice.length === processedText.length) : true;
+
+            let summary: string | undefined;
+            if (processed && summarize) {
+                summary = summarizeText(processedText, { maxSentences: summaryMaxSentences, maxChars: summaryMaxChars });
+            }
+
+            let matches: GrepMatch[] | undefined;
+            if (processed && search) {
+                matches = grepLike(processedText, search, {
+                    isRegex: searchIsRegex,
+                    caseSensitive,
+                    before,
+                    after,
+                    context,
+                    maxMatches,
+                });
+            }
+
+            const rawPreview = includeRawPreview ? Buffer.from(allData).slice(0, rawPreviewSize).toString('utf-8') : undefined;
 
             const result: FetchResult = {
                 requestId,
                 status: httpStatus,
                 statusText,
+                contentType,
                 contentSize: expectedSize,
                 actualSize: fetchedSize,
-                data: Buffer.from(dataToReturn).toString('utf-8'),
+                processed,
+                textSize,
+                data: textSlice,
+                summary,
+                matches,
+                rawPreview,
                 isComplete,
                 responseHeaders: includeResponseHeaders ? responseHeaders : undefined,
-                error: computedError
+                error: computedError,
             };
 
             // 警告は data の先頭に含めないが、ヘッダに含める方法がないため、errorがない場合はstatusTextに付記
@@ -281,6 +355,7 @@ class FetchCacheManager {
                 statusText: "Error",
                 actualSize: 0,
                 data: "",
+                processed: false,
                 isComplete: true,
                 error: errMsg,
                 errorCode: errCode
@@ -413,6 +488,97 @@ class FetchCacheManager {
                 status: cache.status,
                 error: cache.error
             }
+        };
+    }
+
+    // Apply processing pipeline to cached raw data and produce the same view as fetch
+    getProcessedView(
+        requestId: string,
+        options?: {
+            outputSize?: number;
+            process?: boolean;
+            summarize?: boolean;
+            summaryMaxSentences?: number;
+            summaryMaxChars?: number;
+            search?: string;
+            searchIsRegex?: boolean;
+            caseSensitive?: boolean;
+            context?: number;
+            before?: number;
+            after?: number;
+            maxMatches?: number;
+            includeRawPreview?: boolean;
+            rawPreviewSize?: number;
+        }
+    ): FetchResult | null {
+        const cache = this.getByRequestId(requestId);
+        if (!cache) return null;
+
+        const {
+            outputSize = 4096,
+            process = true,
+            summarize = true,
+            summaryMaxSentences = 3,
+            summaryMaxChars = 500,
+            search,
+            searchIsRegex = false,
+            caseSensitive = false,
+            context = 2,
+            before,
+            after,
+            maxMatches = 20,
+            includeRawPreview = false,
+            rawPreviewSize = 1024,
+        } = options || {};
+
+        const contentType = cache.contentType;
+        const kind = detectKind(contentType);
+        let processedText = '';
+        let processed = false;
+        if (process) {
+            processedText = toText(cache.data, kind);
+            processed = processedText.length > 0;
+        }
+        const textSize = processed ? processedText.length : undefined;
+        const textSlice = processed ? processedText.slice(0, outputSize) : '';
+        const isComplete = processed ? (textSlice.length === processedText.length) : true;
+
+        let summary: string | undefined;
+        if (processed && summarize) {
+            summary = summarizeText(processedText, { maxSentences: summaryMaxSentences, maxChars: summaryMaxChars });
+        }
+
+        let matches: GrepMatch[] | undefined;
+        if (processed && search) {
+            matches = grepLike(processedText, search, {
+                isRegex: searchIsRegex,
+                caseSensitive,
+                before,
+                after,
+                context,
+                maxMatches,
+            });
+        }
+
+        const rawPreview = includeRawPreview ? cache.data.slice(0, rawPreviewSize).toString('utf-8') : undefined;
+
+        return {
+            requestId: cache.requestId,
+            status: cache.httpStatus ?? 0,
+            statusText: cache.statusText ?? '',
+            contentType,
+            contentSize: cache.data.length,
+            actualSize: cache.fetchedSize,
+            processed,
+            textSize,
+            data: textSlice,
+            summary,
+            matches,
+            rawPreview,
+            isComplete,
+            responseHeaders: undefined,
+            error: cache.error,
+            errorCode: cache.errorCode,
         };
     }
 

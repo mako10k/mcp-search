@@ -16,7 +16,25 @@ const logger = winston.createLogger({
 });
 
 export async function getFetchCache(params: GetFetchCacheParams) {
-    const { requestId, includeHeaders, startPosition, size } = params;
+    const {
+        requestId,
+        includeHeaders,
+        mode = "text",
+        startPosition,
+        size,
+        outputSize,
+        process,
+        summarize,
+        summaryMaxSentences,
+        summaryMaxChars,
+        search,
+        searchIsRegex,
+        caseSensitive,
+        context,
+        before,
+        after,
+        maxMatches,
+    } = params;
 
     try {
         logger.info(`Retrieving fetch cache data: ${requestId}`, { 
@@ -25,12 +43,22 @@ export async function getFetchCache(params: GetFetchCacheParams) {
             includeHeaders 
         });
         
-        const result = fetchCacheManager.getFetchData(
-            requestId,
-            includeHeaders,
-            startPosition,
-            size
-        );
+        const result = mode === 'rawChunk'
+            ? fetchCacheManager.getFetchData(requestId, includeHeaders, startPosition, size)
+            : fetchCacheManager.getProcessedView(requestId, {
+                outputSize,
+                process,
+                summarize,
+                summaryMaxSentences,
+                summaryMaxChars,
+                search,
+                searchIsRegex,
+                caseSensitive,
+                context,
+                before,
+                after,
+                maxMatches,
+            });
 
         if (!result) {
             return {
@@ -39,8 +67,13 @@ export async function getFetchCache(params: GetFetchCacheParams) {
             };
         }
 
-        logger.info(`Fetch cache data retrieved: ${result.dataSize} bytes from position ${result.startPosition}`);
-        return result;
+        if (mode === 'rawChunk') {
+            logger.info(`Fetch cache raw chunk retrieved: ${(result as any).dataSize} bytes from position ${(result as any).startPosition}`);
+            return result;
+        } else {
+            logger.info(`Fetch cache processed view retrieved: requestId=${(result as any).requestId}`);
+            return result;
+        }
 
     } catch (error) {
         logger.error("Error retrieving fetch cache data:", error);

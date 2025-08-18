@@ -16,13 +16,26 @@ const logger = winston.createLogger({
 });
 
 export async function fetchUrl(params: FetchParams) {
-    const { 
-        url, 
-        method, 
-        headers, 
-        windowSize, 
-        timeout, 
-        includeResponseHeaders 
+    const {
+        url,
+        method,
+        headers,
+        timeout,
+        includeResponseHeaders,
+        outputSize,
+        process,
+        summarize,
+        summaryMaxSentences,
+        summaryMaxChars,
+        search,
+        searchIsRegex,
+        caseSensitive,
+        context,
+        before,
+        after,
+        maxMatches,
+        includeRawPreview,
+        rawPreviewSize,
     } = params;
 
     logger.info(`Fetch requested: ${method} ${url}`);
@@ -30,9 +43,24 @@ export async function fetchUrl(params: FetchParams) {
         url,
         method,
         headers,
-        windowSize,
+        outputSize,
         timeout,
-        includeResponseHeaders
+        includeResponseHeaders,
+        {
+            process,
+            summarize,
+            summaryMaxSentences,
+            summaryMaxChars,
+            search,
+            searchIsRegex,
+            caseSensitive,
+            context,
+            before,
+            after,
+            maxMatches,
+            includeRawPreview,
+            rawPreviewSize,
+        }
     );
 
     // fetchCacheManagerは詳細なエラー情報を返すため、そのまま返却

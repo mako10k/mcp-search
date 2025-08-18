@@ -150,9 +150,22 @@ export function createMcpServer(): McpServer {
             url: FetchParamsSchema.shape.url,
             method: FetchParamsSchema.shape.method,
             headers: FetchParamsSchema.shape.headers,
-            windowSize: FetchParamsSchema.shape.windowSize,
             timeout: FetchParamsSchema.shape.timeout,
             includeResponseHeaders: FetchParamsSchema.shape.includeResponseHeaders,
+            outputSize: FetchParamsSchema.shape.outputSize,
+            process: FetchParamsSchema.shape.process,
+            summarize: FetchParamsSchema.shape.summarize,
+            summaryMaxSentences: FetchParamsSchema.shape.summaryMaxSentences,
+            summaryMaxChars: FetchParamsSchema.shape.summaryMaxChars,
+            search: FetchParamsSchema.shape.search,
+            searchIsRegex: FetchParamsSchema.shape.searchIsRegex,
+            caseSensitive: FetchParamsSchema.shape.caseSensitive,
+            context: FetchParamsSchema.shape.context,
+            before: FetchParamsSchema.shape.before,
+            after: FetchParamsSchema.shape.after,
+            maxMatches: FetchParamsSchema.shape.maxMatches,
+            includeRawPreview: FetchParamsSchema.shape.includeRawPreview,
+            rawPreviewSize: FetchParamsSchema.shape.rawPreviewSize,
         },
         async (params) => {
             logger.info("Fetch requested:", { url: params.url });
@@ -230,8 +243,21 @@ export function createMcpServer(): McpServer {
         {
             requestId: GetFetchCacheParamsSchema.shape.requestId,
             includeHeaders: GetFetchCacheParamsSchema.shape.includeHeaders,
+            mode: GetFetchCacheParamsSchema.shape.mode,
             startPosition: GetFetchCacheParamsSchema.shape.startPosition,
             size: GetFetchCacheParamsSchema.shape.size,
+            outputSize: GetFetchCacheParamsSchema.shape.outputSize,
+            process: GetFetchCacheParamsSchema.shape.process,
+            summarize: GetFetchCacheParamsSchema.shape.summarize,
+            summaryMaxSentences: GetFetchCacheParamsSchema.shape.summaryMaxSentences,
+            summaryMaxChars: GetFetchCacheParamsSchema.shape.summaryMaxChars,
+            search: GetFetchCacheParamsSchema.shape.search,
+            searchIsRegex: GetFetchCacheParamsSchema.shape.searchIsRegex,
+            caseSensitive: GetFetchCacheParamsSchema.shape.caseSensitive,
+            context: GetFetchCacheParamsSchema.shape.context,
+            before: GetFetchCacheParamsSchema.shape.before,
+            after: GetFetchCacheParamsSchema.shape.after,
+            maxMatches: GetFetchCacheParamsSchema.shape.maxMatches,
         },
         async (params) => {
             logger.info("Fetch cache data requested:", params);
@@ -239,12 +265,13 @@ export function createMcpServer(): McpServer {
             const validatedParams = GetFetchCacheParamsSchema.parse(params);
             const result = await getFetchCache(validatedParams);
 
-            if ("error" in result && result.error) {
-                logger.info("Fetch cache data error:", result.message);
+            if ((result as any).error) {
+                const msg = (result as any).message || 'unknown error';
+                logger.info("Fetch cache data error:", msg);
                 return {
                     content: [{
                         type: "text",
-                        text: `Error: ${result.message}`,
+                        text: `Error: ${msg}`,
                     }],
                 };
             } else {

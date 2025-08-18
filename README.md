@@ -95,9 +95,9 @@ Note: The server listens on a port only in HTTP mode. In STDIO mode (default), n
 - **get-search-result**: Retrieve individual search results by ID
 
 ### Web Fetch Tools
-- **fetch**: Fetch web content with customizable options and caching
+- **fetch**: Fetch web content with automatic content processing, optional summarization, grep-like search, and caching
 - **list-fetch-cache**: List cached fetch requests
-- **get-fetch-cache**: Retrieve cached fetch data with pagination
+- **get-fetch-cache**: Retrieve cached fetch data either as processed text view or raw byte chunks
 
 ## MCP Configuration Examples
 
@@ -277,31 +277,50 @@ Retrieve a specific search result by result ID.
 
 ### Web Fetch Tools
 
-#### fetch
-Fetch content from a specified URL with customizable options and caching.
+#### fetch (Breaking changes in 2.1.0)
+Fetch content with automatic processing and optional search/summary. By default, returns processed text (not raw HTML) based on Content-Type.
 
 **Parameters:**
 - `url` (string, required): Target URL to fetch
-- `method` (string, optional): HTTP method (GET, POST, PUT, DELETE, etc. - default: GET)
+- `method` (string, optional): HTTP method (default: GET)
 - `headers` (object, optional): Custom HTTP headers
-- `windowSize` (number, optional): Response data window size in bytes for model consumption (max: 32KB = 32768, default: 4096)
 - `timeout` (number, optional): Request timeout in milliseconds (min: 100, max: 600000, default: 30000)
 - `includeResponseHeaders` (boolean, optional): Include response headers in output (default: false)
+- `outputSize` (number, optional): Max bytes of processed text to return (replaces windowSize; max 32768; default 4096)
+- `process` (boolean, optional): Auto process by Content-Type (HTML→text, JSON pretty, text passthrough; default: true)
+- `summarize` (boolean, optional): Include short extractive summary (default: true)
+- `summaryMaxSentences` (number, optional): Max sentences in summary (default: 3)
+- `summaryMaxChars` (number, optional): Max characters in summary (default: 500)
+- `search` (string, optional): Search pattern (string or regex if `searchIsRegex=true`)
+- `searchIsRegex` (boolean, optional): Interpret `search` as regex (default: false)
+- `caseSensitive` (boolean, optional): Case-sensitive search (default: false)
+- `context` (number, optional): Lines of context around matches (-C; default: 2)
+- `before` (number, optional): Lines before match (-B; overrides `context`)
+- `after` (number, optional): Lines after match (-A; overrides `context`)
+- `maxMatches` (number, optional): Max number of matches (default: 20)
+- `includeRawPreview` (boolean, optional): Include raw data preview (default: false)
+- `rawPreviewSize` (number, optional): Raw preview size in bytes (default: 1024)
 
 **Response:**
 - `requestId` (string): Unique identifier for this fetch request
 - `status` (number): HTTP status code
 - `statusText` (string): HTTP status message
-- `contentSize` (number): Total content size if known from Content-Length header
-- `actualSize` (number): Actual size of fetched data
-- `data` (string): Response content (up to windowSize bytes)
-- `isComplete` (boolean): Whether the entire response was fetched
+- `contentType` (string, optional): Response Content-Type
+- `contentSize` (number, optional): Total content size if known
+- `actualSize` (number): Actual size of fetched data (raw)
+- `processed` (boolean): Whether processing was applied
+- `textSize` (number, optional): Size of processed text
+- `data` (string): Processed text (up to `outputSize`)
+- `summary` (string, optional): Extractive summary
+- `matches` (array, optional): Grep-like matches with context
+- `rawPreview` (string, optional): Raw data preview when requested
+- `isComplete` (boolean): Whether `data` contains the full processed text
 - `responseHeaders` (object, optional): Response headers if requested
 - `error` (string, optional): Error message for errors (network/timeout/HTTP>=400)
-- `errorCode` (string, optional): Platform error code for network/connection issues (e.g., ENOTFOUND, ECONNREFUSED, ETIMEDOUT)
+- `errorCode` (string, optional): Platform error code (e.g., ENOTFOUND, ECONNREFUSED, ETIMEDOUT)
 
 Notes:
-- On redirects, if the final response host differs from the requested host, statusText includes a warning suffix: `(warning: host mismatch)`.
+- On redirects where the final host differs from the requested host, `statusText` includes `(warning: host mismatch)`.
 
 **Caching Behavior:**
 - All responses are cached regardless of status code
@@ -330,30 +349,28 @@ List cached fetch requests with their status and progress information.
   - `expiresAt` (string): Cache expiry timestamp
 - Pagination information
 
-#### get-fetch-cache
-Retrieve cached fetch data with byte-level pagination support.
+#### get-fetch-cache (Updated in 2.1.0)
+Retrieve cached fetch data in two modes: processed text view or raw byte chunks.
 
 **Parameters:**
 - `requestId` (string, required): Request ID to retrieve
-- `includeHeaders` (boolean, optional): Include response headers (default: false)
-- `startPosition` (number, optional): Starting byte position (default: 0)
-- `size` (number, optional): Number of bytes to retrieve for model consumption (max: 1MB, default: 4096)
+- `mode` (string, optional): `"text"` (default) or `"rawChunk"`
+- For `mode="rawChunk"`:
+  - `includeHeaders` (boolean, optional): Include response headers (default: false)
+  - `startPosition` (number, optional): Starting byte position (default: 0)
+  - `size` (number, optional): Number of bytes to retrieve (max: 1MB, default: 4096)
+- For `mode="text"` (mirrors fetch processing options):
+  - `outputSize`, `process`, `summarize`, `summaryMaxSentences`, `summaryMaxChars`,
+    `search`, `searchIsRegex`, `caseSensitive`, `context`, `before`, `after`, `maxMatches`
 
-**Response:**
-- `requestId` (string): Request identifier
-- `url` (string): Original request URL
-- `httpStatus` (number): HTTP response status
-- `contentSize` (number): Total content size
-- `startPosition` (number): Starting position of returned data
-- `dataSize` (number): Size of returned data chunk
-- `data` (string): Response content chunk
-- `hasMore` (boolean): Whether more data is available
-- `responseHeaders` (object, optional): Response headers if requested
-- `metadata` (object): Additional fetch metadata (method, timestamp, etc.)
+**Response (mode=text):** Same shape as `fetch` response (processed text, summary, matches, etc.)
 
-**Byte-level Pagination:**
-- Data can be retrieved in chunks using `startPosition` and `size` parameters
-- Supports efficient access to large responses without loading entire content
-- Default chunk size is 4096 bytes for model consumption
-- Maximum chunk size is 1MB for model data
-- Internal cache can store up to MAX_FETCH_SIZE bytes (configurable via environment variable)
+**Response (mode=rawChunk):**
+- `requestId`, `url`, `httpStatus`, `contentSize`, `startPosition`, `dataSize`, `data`, `hasMore`, `responseHeaders`, `metadata`
+
+Notes:
+- Cache stores raw data; processed view is computed on retrieval.
+
+**Breaking changes:**
+- `fetch.data` is now processed text by default (previously raw slice)
+- `windowSize` is replaced with `outputSize`

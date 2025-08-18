@@ -1,6 +1,6 @@
 {
     "name": "@mako10k/mcp-search",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "description": "A Model Context Protocol (MCP) server for Google Custom Search and Web Fetch with comprehensive caching capabilities. Supports both STDIO and HTTP transports.",
     "main": "dist/index.js",
     "repository": {
@@ -41,6 +41,7 @@
         "axios": "^1.4.0",
         "dotenv": "^16.5.0",
         "express": "^5.1.0",
+        "html-to-text": "^9.0.5",
         "uuid": "^11.1.0",
         "winston": "^3.17.0",
         "zod": "^3.25.51"
