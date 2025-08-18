@@ -3,9 +3,7 @@
 import express from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createMcpServer, logger } from './server.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import './env.js';
 
 async function main() {
   // 環境変数のチェック
@@ -61,15 +59,8 @@ async function main() {
 }
 
 // プロセス終了時のクリーンアップ
-process.on('SIGINT', () => {
-  logger.info('Received SIGINT, shutting down gracefully...');
-  process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-  logger.info('Received SIGTERM, shutting down gracefully...');
-  process.exit(0);
-});
+import { registerSignalHandlers } from './signals.js';
+registerSignalHandlers();
 
 // メイン関数を実行
 main().catch((error) => {
