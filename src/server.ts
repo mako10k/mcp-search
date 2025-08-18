@@ -4,6 +4,8 @@ import { listSearchCache } from './listSearchCache';
 import { fetchUrl } from './fetch';
 import { listFetchCache } from './listFetchCache';
 import { getFetchCache } from './getFetchCache';
+import type { SearchResponse } from './cache';
+import type { FetchResult } from './fetchCache';
 import {
   GetSearchResultParamsSchema,
   ListSearchCacheParamsSchema,
@@ -54,12 +56,13 @@ export function createMcpServer(): McpServer {
           ],
         };
       } else {
-        logger.info(`Search completed: ${(results as any).resultCount} results found`);
+        const sres = results as SearchResponse;
+        logger.info(`Search completed: ${sres.resultCount} results found`);
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify(results),
+              text: JSON.stringify(sres),
             },
           ],
         };
@@ -130,7 +133,7 @@ export function createMcpServer(): McpServer {
           ],
         };
       } else {
-        logger.info(`Search cache list retrieved: ${(result as any).searches.length} entries`);
+        logger.info('Search cache list retrieved');
         return {
           content: [
             {
@@ -172,12 +175,12 @@ export function createMcpServer(): McpServer {
       logger.info('Fetch requested:', { url: params.url });
 
       const validatedParams = FetchParamsSchema.parse(params);
-      const result = await fetchUrl(validatedParams);
+      const result: FetchResult = await fetchUrl(validatedParams);
 
-      if ((result as any).error) {
-        const err = (result as any).error;
-        const httpStatus = (result as any).status ?? 0;
-        const errCode = (result as any).errorCode;
+      if (result.error) {
+        const err = result.error;
+        const httpStatus = result.status ?? 0;
+        const errCode = result.errorCode;
         logger.info('Fetch error:', { error: err, status: httpStatus, code: errCode });
         const details = [
           `Error: ${err}`,
@@ -196,7 +199,7 @@ export function createMcpServer(): McpServer {
         };
       }
 
-      logger.info(`Fetch completed: ${(result as any).actualSize} bytes fetched`);
+      logger.info(`Fetch completed: ${result.actualSize} bytes fetched`);
       return {
         content: [
           {
@@ -234,7 +237,7 @@ export function createMcpServer(): McpServer {
           ],
         };
       } else {
-        logger.info(`Fetch cache list retrieved: ${(result as any).requests.length} entries`);
+        logger.info('Fetch cache list retrieved');
         return {
           content: [
             {
@@ -276,8 +279,8 @@ export function createMcpServer(): McpServer {
       const validatedParams = GetFetchCacheParamsSchema.parse(params);
       const result = await getFetchCache(validatedParams);
 
-      if ((result as any).error) {
-        const msg = (result as any).message || 'unknown error';
+      if ('error' in result && result.error) {
+        const msg = result.message || 'unknown error';
         logger.info('Fetch cache data error:', msg);
         return {
           content: [
@@ -288,7 +291,7 @@ export function createMcpServer(): McpServer {
           ],
         };
       } else {
-        logger.info(`Fetch cache data retrieved: ${(result as any).dataSize} bytes`);
+        logger.info('Fetch cache data retrieved');
         return {
           content: [
             {

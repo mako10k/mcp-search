@@ -1,3 +1,4 @@
+.jscpd-report/
 dist/
 node_modules/
 logs/

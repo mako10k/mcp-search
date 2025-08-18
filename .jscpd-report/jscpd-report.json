@@ -1,0 +1,529 @@
+{
+  "statistics": {
+    "detectionDate": "2025-08-18T02:10:08.232Z",
+    "formats": {
+      "typescript": {
+        "sources": {
+          "src/types.ts": {
+            "lines": 273,
+            "tokens": 1937,
+            "sources": 1,
+            "clones": 6,
+            "duplicatedLines": 144,
+            "duplicatedTokens": 990,
+            "percentage": 52.75,
+            "percentageTokens": 51.11,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/stdio.ts": {
+            "lines": 52,
+            "tokens": 403,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 29,
+            "duplicatedTokens": 236,
+            "percentage": 55.77,
+            "percentageTokens": 58.56,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/server.ts": {
+            "lines": 306,
+            "tokens": 2388,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/search.ts": {
+            "lines": 217,
+            "tokens": 1876,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/logger.ts": {
+            "lines": 31,
+            "tokens": 355,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/listSearchCache.ts": {
+            "lines": 26,
+            "tokens": 200,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/listFetchCache.ts": {
+            "lines": 25,
+            "tokens": 215,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/index.ts": {
+            "lines": 24,
+            "tokens": 160,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/http.ts": {
+            "lines": 78,
+            "tokens": 719,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 29,
+            "duplicatedTokens": 236,
+            "percentage": 37.18,
+            "percentageTokens": 32.82,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/getSearchResult.ts": {
+            "lines": 29,
+            "tokens": 203,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/getFetchCache.ts": {
+            "lines": 90,
+            "tokens": 571,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/fetchCache.ts": {
+            "lines": 699,
+            "tokens": 5923,
+            "sources": 1,
+            "clones": 6,
+            "duplicatedLines": 114,
+            "duplicatedTokens": 934,
+            "percentage": 16.31,
+            "percentageTokens": 15.77,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/fetch.ts": {
+            "lines": 57,
+            "tokens": 294,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/contentProcessing.ts": {
+            "lines": 179,
+            "tokens": 1851,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/config.ts": {
+            "lines": 29,
+            "tokens": 266,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/cli.ts": {
+            "lines": 149,
+            "tokens": 705,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/cache.ts": {
+            "lines": 286,
+            "tokens": 2439,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 2550,
+          "tokens": 20505,
+          "sources": 17,
+          "clones": 8,
+          "duplicatedLines": 158,
+          "duplicatedTokens": 1198,
+          "percentage": 6.2,
+          "percentageTokens": 5.84,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      }
+    },
+    "total": {
+      "lines": 2550,
+      "tokens": 20505,
+      "sources": 17,
+      "clones": 8,
+      "duplicatedLines": 158,
+      "duplicatedTokens": 1198,
+      "percentage": 6.2,
+      "percentageTokens": 5.84,
+      "newDuplicatedLines": 0,
+      "newClones": 0
+    }
+  },
+  "duplicates": [
+    {
+      "format": "typescript",
+      "lines": 19,
+      "fragment": "),\n  page: z\n    .number()\n    .int()\n    .min(1)\n    .optional()\n    .default(1)\n    .describe('Page number for pagination (1-based)'),\n  limit: z\n    .number()\n    .int()\n    .min(1)\n    .max(100)\n    .optional()\n    .default(10)\n    .describe('Number of results per page (max 100, default 10)'),\n});\n\nexport type ListFetchCacheParams",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/types.ts",
+        "start": 153,
+        "end": 171,
+        "startLoc": {
+          "line": 153,
+          "column": 32,
+          "position": 1082
+        },
+        "endLoc": {
+          "line": 171,
+          "column": 21,
+          "position": 1193
+        }
+      },
+      "secondFile": {
+        "name": "src/types.ts",
+        "start": 16,
+        "end": 34,
+        "startLoc": {
+          "line": 16,
+          "column": 68,
+          "position": 122
+        },
+        "endLoc": {
+          "line": 34,
+          "column": 22,
+          "position": 233
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 18,
+      "fragment": "),\n  summaryMaxSentences: z\n    .number()\n    .int()\n    .min(1)\n    .max(10)\n    .optional()\n    .default(3)\n    .describe('Max number of sentences in summary'),\n  summaryMaxChars: z\n    .number()\n    .int()\n    .min(50)\n    .max(2000)\n    .optional()\n    .default(500)\n    .describe('Max characters in summary'),\n  search: z.string().optional().describe('Search pattern'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/types.ts",
+        "start": 218,
+        "end": 235,
+        "startLoc": {
+          "line": 218,
+          "column": 38,
+          "position": 1531
+        },
+        "endLoc": {
+          "line": 235,
+          "column": 17,
+          "position": 1656
+        }
+      },
+      "secondFile": {
+        "name": "src/types.ts",
+        "start": 77,
+        "end": 97,
+        "startLoc": {
+          "line": 77,
+          "column": 56,
+          "position": 548
+        },
+        "endLoc": {
+          "line": 97,
+          "column": 62,
+          "position": 679
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 38,
+      "fragment": "),\n  searchIsRegex: z\n    .boolean()\n    .optional()\n    .default(false)\n    .describe('Interpret search as regular expression'),\n  caseSensitive: z.boolean().optional().default(false).describe('Case-sensitive search'),\n  context: z\n    .number()\n    .int()\n    .min(0)\n    .max(20)\n    .optional()\n    .default(2)\n    .describe('Lines of context around matches (-C)'),\n  before: z\n    .number()\n    .int()\n    .min(0)\n    .max(50)\n    .optional()\n    .describe('Lines of context before match (-B). Overrides context when set'),\n  after: z\n    .number()\n    .int()\n    .min(0)\n    .max(50)\n    .optional()\n    .describe('Lines of context after match (-A). Overrides context when set'),\n  maxMatches: z\n    .number()\n    .int()\n    .min(1)\n    .max(2000)\n    .optional()\n    .default(20)\n    .describe('Maximum number of matches to return'),\n}",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/types.ts",
+        "start": 235,
+        "end": 272,
+        "startLoc": {
+          "line": 235,
+          "column": 17,
+          "position": 1657
+        },
+        "endLoc": {
+          "line": 272,
+          "column": 2,
+          "position": 1916
+        }
+      },
+      "secondFile": {
+        "name": "src/types.ts",
+        "start": 97,
+        "end": 134,
+        "startLoc": {
+          "line": 97,
+          "column": 62,
+          "position": 680
+        },
+        "endLoc": {
+          "line": 134,
+          "column": 18,
+          "position": 940
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 12,
+      "fragment": ";\nimport { createMcpServer, logger } from './server.js';\nimport dotenv from 'dotenv';\n\ndotenv.config();\n\nasync function main() {\n  // 環境変数のチェック\n  if (!process.env.GOOGLE_API_KEY || !process.env.GOOGLE_CX) {\n    logger.warn('Warning: GOOGLE_API_KEY and GOOGLE_CX environment variables are required.');\n    logger.warn('Please create a .env file based on .env.example');\n    logger",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/http.ts",
+        "start": 4,
+        "end": 15,
+        "startLoc": {
+          "line": 4,
+          "column": 53,
+          "position": 32
+        },
+        "endLoc": {
+          "line": 15,
+          "column": 7,
+          "position": 123
+        }
+      },
+      "secondFile": {
+        "name": "src/stdio.ts",
+        "start": 3,
+        "end": 14,
+        "startLoc": {
+          "line": 3,
+          "column": 44,
+          "position": 23
+        },
+        "endLoc": {
+          "line": 14,
+          "column": 43,
+          "position": 114
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 19,
+      "fragment": "}\n\n// プロセス終了時のクリーンアップ\nprocess.on('SIGINT', () => {\n  logger.info('Received SIGINT, shutting down gracefully...');\n  process.exit(0);\n});\n\nprocess.on('SIGTERM', () => {\n  logger.info('Received SIGTERM, shutting down gracefully...');\n  process.exit(0);\n});\n\n// メイン関数を実行\nmain().catch((error) => {\n  const msg = error instanceof Error ? error.message : String(error);\n  logger.error('Unexpected error in main:', msg);\n  process.exit(1);\n});",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/http.ts",
+        "start": 61,
+        "end": 79,
+        "startLoc": {
+          "line": 61,
+          "column": 1,
+          "position": 574
+        },
+        "endLoc": {
+          "line": 79,
+          "column": 2,
+          "position": 719
+        }
+      },
+      "secondFile": {
+        "name": "src/stdio.ts",
+        "start": 35,
+        "end": 53,
+        "startLoc": {
+          "line": 35,
+          "column": 1,
+          "position": 258
+        },
+        "endLoc": {
+          "line": 53,
+          "column": 2,
+          "position": 403
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 15,
+      "fragment": "process?: boolean;\n      summarize?: boolean;\n      summaryMaxSentences?: number;\n      summaryMaxChars?: number;\n      search?: string;\n      searchIsRegex?: boolean;\n      caseSensitive?: boolean;\n      context?: number;\n      before?: number;\n      after?: number;\n      maxMatches?: number;\n      includeRawPreview?: boolean;\n      rawPreviewSize?: number;\n    },\n  ): FetchResult",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/fetchCache.ts",
+        "start": 519,
+        "end": 533,
+        "startLoc": {
+          "line": 519,
+          "column": 7,
+          "position": 4388
+        },
+        "endLoc": {
+          "line": 533,
+          "column": 12,
+          "position": 4499
+        }
+      },
+      "secondFile": {
+        "name": "src/fetchCache.ts",
+        "start": 79,
+        "end": 93,
+        "startLoc": {
+          "line": 79,
+          "column": 7,
+          "position": 676
+        },
+        "endLoc": {
+          "line": 93,
+          "column": 8,
+          "position": 787
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 16,
+      "fragment": "process = true,\n      summarize = true,\n      summaryMaxSentences = 3,\n      summaryMaxChars = 500,\n      search,\n      searchIsRegex = false,\n      caseSensitive = false,\n      context = 2,\n      before,\n      after,\n      maxMatches = 20,\n      includeRawPreview = false,\n      rawPreviewSize = 1024,\n    } = options || {};\n\n    const contentType",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/fetchCache.ts",
+        "start": 539,
+        "end": 554,
+        "startLoc": {
+          "line": 539,
+          "column": 7,
+          "position": 4550
+        },
+        "endLoc": {
+          "line": 554,
+          "column": 12,
+          "position": 4658
+        }
+      },
+      "secondFile": {
+        "name": "src/fetchCache.ts",
+        "start": 253,
+        "end": 268,
+        "startLoc": {
+          "line": 253,
+          "column": 9,
+          "position": 2161
+        },
+        "endLoc": {
+          "line": 268,
+          "column": 5,
+          "position": 2269
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 29,
+      "fragment": ", kind);\n      processed = processedText.length > 0;\n    }\n    const textSize = processed ? processedText.length : undefined;\n    const textSlice = processed ? processedText.slice(0, outputSize) : '';\n    const isComplete = processed ? textSlice.length === processedText.length : true;\n\n    let summary: string | undefined;\n    if (processed && summarize) {\n      summary = summarizeText(processedText, {\n        maxSentences: summaryMaxSentences,\n        maxChars: summaryMaxChars,\n      });\n    }\n\n    let matches: GrepMatch[] | undefined;\n    if (processed && search) {\n      matches = grepLike(processedText, search, {\n        isRegex: searchIsRegex,\n        caseSensitive,\n        before,\n        after,\n        context,\n        maxMatches,\n      });\n    }\n\n    const rawPreview = includeRawPreview\n      ? cache",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/fetchCache.ts",
+        "start": 559,
+        "end": 587,
+        "startLoc": {
+          "line": 559,
+          "column": 5,
+          "position": 4719
+        },
+        "endLoc": {
+          "line": 587,
+          "column": 6,
+          "position": 4967
+        }
+      },
+      "secondFile": {
+        "name": "src/fetchCache.ts",
+        "start": 272,
+        "end": 300,
+        "startLoc": {
+          "line": 272,
+          "column": 2,
+          "position": 2321
+        },
+        "endLoc": {
+          "line": 300,
+          "column": 7,
+          "position": 2569
+        }
+      }
+    }
+  ]
+}
