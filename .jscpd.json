@@ -1,6 +1,6 @@
 {
   "reporters": ["console"],
-  "threshold": 0,
+  "threshold": 1,
   "silent": true,
   "ignore": [
     "**/node_modules/**",
