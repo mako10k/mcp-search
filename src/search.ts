@@ -51,9 +51,55 @@ type MinimalAxiosError = {
   message?: string;
 };
 
-export async function searchEngine(
+type GoogleItemShape = {
+  title?: string;
+  link?: string;
+  snippet?: string;
+  displayLink?: string;
+  htmlTitle?: string;
+  htmlSnippet?: string;
+  [key: string]: unknown;
+};
+
+interface GoogleApiResponse {
+  items?: GoogleItemShape[];
+  searchInformation?: { totalResults?: string };
+  spelling?: { correctedQuery?: string };
+}
+
+function validateParams(params: z.infer<typeof SearchParamsSchema>): void {
+  const { query, numResults, startIndex, imageSize, imageType, imageColor } = params;
+  if (!query || typeof query !== 'string' || query.trim() === '') {
+    throw new Error('Query parameter is required and must be a non-empty string.');
+  }
+  if (numResults && (numResults < 1 || numResults > 10)) {
+    throw new Error('numResults must be between 1 and 10.');
+  }
+  if (startIndex && (startIndex < 1 || startIndex > 100 - (numResults || 10))) {
+    throw new Error(
+      'startIndex must be between 1 and (100 - numResults). Ensure the value is within the valid range.',
+    );
+  }
+  if (imageSize && !['small', 'medium', 'large'].includes(imageSize)) {
+    throw new Error("Invalid imageSize parameter. Allowed values are 'small', 'medium', 'large'.");
+  }
+  if (imageType && !['clipart', 'photo', 'lineart'].includes(imageType)) {
+    throw new Error(
+      "Invalid imageType parameter. Allowed values are 'clipart', 'photo', 'lineart'.",
+    );
+  }
+  if (imageColor && !['black', 'white', 'red', 'blue', 'green', 'yellow'].includes(imageColor)) {
+    throw new Error(
+      "Invalid imageColor parameter. Allowed values are 'black', 'white', 'red', 'blue', 'green', 'yellow'.",
+    );
+  }
+}
+
+function buildSearchUrl(
   params: z.infer<typeof SearchParamsSchema>,
-): Promise<SearchResponse | { error: boolean; status?: number; message: string }> {
+  apiKey: string,
+  cx: string,
+): string {
   const {
     query,
     language,
@@ -65,126 +111,83 @@ export async function searchEngine(
     imageType,
     imageColor,
   } = params;
-
-  // Input validation
-  if (!query || typeof query !== 'string' || query.trim() === '') {
-    throw new Error('Query parameter is required and must be a non-empty string.');
-  }
-
-  if (numResults && (numResults < 1 || numResults > 10)) {
-    throw new Error('numResults must be between 1 and 10.');
-  }
-
-  if (startIndex && (startIndex < 1 || startIndex > 100 - (numResults || 10))) {
-    throw new Error(
-      'startIndex must be between 1 and (100 - numResults). Ensure the value is within the valid range.',
-    );
-  }
-
-  if (imageSize && !['small', 'medium', 'large'].includes(imageSize)) {
-    throw new Error("Invalid imageSize parameter. Allowed values are 'small', 'medium', 'large'.");
-  }
-
-  if (imageType && !['clipart', 'photo', 'lineart'].includes(imageType)) {
-    throw new Error(
-      "Invalid imageType parameter. Allowed values are 'clipart', 'photo', 'lineart'.",
-    );
-  }
-
-  if (imageColor && !['black', 'white', 'red', 'blue', 'green', 'yellow'].includes(imageColor)) {
-    throw new Error(
-      "Invalid imageColor parameter. Allowed values are 'black', 'white', 'red', 'blue', 'green', 'yellow'.",
-    );
-  }
-
-  const googleApiKey = process.env.GOOGLE_API_KEY;
-  const googleCx = process.env.GOOGLE_CX;
-
-  if (!googleApiKey || !googleCx) {
-    throw new Error('Google API key or CX is not set in environment variables.');
-  }
-
   const url = new URL('https://www.googleapis.com/customsearch/v1');
   url.searchParams.append('q', query);
-  url.searchParams.append('key', googleApiKey);
-  url.searchParams.append('cx', googleCx);
+  url.searchParams.append('key', apiKey);
+  url.searchParams.append('cx', cx);
+  if (language) url.searchParams.append('lr', `lang_${language}`);
+  if (region) url.searchParams.append('cr', `country${region}`);
+  if (numResults) url.searchParams.append('num', numResults.toString());
+  if (startIndex) url.searchParams.append('start', startIndex.toString());
+  if (imageSearch) url.searchParams.append('searchType', 'image');
+  if (imageSize) url.searchParams.append('imgSize', imageSize);
+  if (imageType) url.searchParams.append('imgType', imageType);
+  if (imageColor) url.searchParams.append('imgColorType', imageColor);
+  return url.toString();
+}
 
-  if (language) {
-    url.searchParams.append('lr', `lang_${language}`);
-  }
+function extractApiErrorMessage(data: unknown): string {
+  const fallback = 'Unknown error from API. Please check the API key, CX, and query parameters.';
+  if (typeof data !== 'object' || data === null) return fallback;
+  const maybe = data as { error?: { message?: string } };
+  return typeof maybe.error?.message === 'string' ? maybe.error.message : fallback;
+}
 
-  if (region) {
-    url.searchParams.append('cr', `country${region}`);
-  }
-
-  if (numResults) {
-    url.searchParams.append('num', numResults.toString());
-  }
-
-  if (startIndex) {
-    url.searchParams.append('start', startIndex.toString());
-  }
-
-  if (imageSearch) {
-    url.searchParams.append('searchType', 'image');
-  }
-
-  if (imageSize) {
-    url.searchParams.append('imgSize', imageSize);
-  }
-
-  if (imageType) {
-    url.searchParams.append('imgType', imageType);
-  }
-
-  if (imageColor) {
-    url.searchParams.append('imgColorType', imageColor);
-  }
-
-  try {
-    const response = await axios.get(url.toString());
-
-    // Check if response format is valid
-    if (!response.data.items || !Array.isArray(response.data.items)) {
-      logger.debug('Invalid response format detected:', {
-        status: response.status,
-        data: response.data,
-      });
-
-      if (response.data.searchInformation?.totalResults === '0') {
-        logger.info('No results found for the query.');
-        return {
-          error: true,
-          status: response.status,
-          message: 'No results found for the query. Consider refining your search terms.',
-        };
-      }
-
-      if (response.data.spelling?.correctedQuery) {
-        logger.info(`No results found. Did you mean: ${response.data.spelling.correctedQuery}?`);
-        return {
-          error: true,
-          status: response.status,
-          message: `No results found. Did you mean: ${response.data.spelling.correctedQuery}?`,
-        };
-      }
-
-      logger.warn('Invalid response format: items must be an array.');
+function handleApiResponse(
+  response: { status: number; data: GoogleApiResponse },
+  query: string,
+): SearchResponse | { error: boolean; status?: number; message: string } {
+  if (!response.data.items || !Array.isArray(response.data.items)) {
+    logger.debug('Invalid response format detected:', {
+      status: response.status,
+      data: response.data,
+    });
+    if (response.data.searchInformation?.totalResults === '0') {
+      logger.info('No results found for the query.');
       return {
         error: true,
         status: response.status,
-        message:
-          'Invalid response format: items must be an array. Please verify the query parameters and ensure the Programmable Search Engine is correctly configured.',
+        message: 'No results found for the query. Consider refining your search terms.',
       };
     }
+    if (response.data.spelling?.correctedQuery) {
+      logger.info(`No results found. Did you mean: ${response.data.spelling.correctedQuery}?`);
+      return {
+        error: true,
+        status: response.status,
+        message: `No results found. Did you mean: ${response.data.spelling.correctedQuery}?`,
+      };
+    }
+    logger.warn('Invalid response format: items must be an array.');
+    return {
+      error: true,
+      status: response.status,
+      message:
+        'Invalid response format: items must be an array. Please verify the query parameters and ensure the Programmable Search Engine is correctly configured.',
+    };
+  }
+  const searchResponse = cacheManager.store(query, response.data.items as GoogleItemShape[]);
+  logger.info(
+    `Search completed: ${searchResponse.resultCount} results cached with ID ${searchResponse.searchId}`,
+  );
+  return searchResponse;
+}
 
-    // キャッシュに保存して概要応答を返す
-    const searchResponse = cacheManager.store(query, response.data.items);
-    logger.info(
-      `Search completed: ${searchResponse.resultCount} results cached with ID ${searchResponse.searchId}`,
-    );
+export async function searchEngine(
+  params: z.infer<typeof SearchParamsSchema>,
+): Promise<SearchResponse | { error: boolean; status?: number; message: string }> {
+  validateParams(params);
+  const googleApiKey = process.env.GOOGLE_API_KEY;
+  const googleCx = process.env.GOOGLE_CX;
+  if (!googleApiKey || !googleCx) {
+    throw new Error('Google API key or CX is not set in environment variables.');
+  }
+  const url = buildSearchUrl(params, googleApiKey, googleCx);
+  const { query } = params;
 
-    return searchResponse;
+  try {
+    const response = await axios.get(url);
+    return handleApiResponse(response, query);
   } catch (error: unknown) {
     const err = error as MinimalAxiosError;
     if (err.response) {
@@ -205,13 +208,6 @@ export async function searchEngine(
       error: true,
       message: `Network or server error: ${msg}. Please ensure the server is reachable and the network connection is stable.`,
     };
-  }
-
-  function extractApiErrorMessage(data: unknown): string {
-    const fallback = 'Unknown error from API. Please check the API key, CX, and query parameters.';
-    if (typeof data !== 'object' || data === null) return fallback;
-    const maybe = data as { error?: { message?: string } };
-    return typeof maybe.error?.message === 'string' ? maybe.error.message : fallback;
   }
 }
 

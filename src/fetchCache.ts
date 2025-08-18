@@ -114,46 +114,21 @@ class FetchCacheManager {
     try {
       logger.info(`Starting fetch: ${method} ${url}`);
 
-      const controller = new AbortController();
-      let timeoutId: NodeJS.Timeout | undefined;
-      if (timeout > 0) {
-        timeoutId = setTimeout(() => controller.abort(), timeout);
-      }
+      const response = await this.performFetch(url, method, headers, timeout);
 
-      let response: Response;
-      try {
-        response = await fetch(url, {
-          method,
-          headers,
-          signal: controller.signal,
-        });
-      } finally {
-        if (timeoutId) clearTimeout(timeoutId);
-      }
-
-  const httpStatus = response.status;
-  const statusText = response.statusText;
-  const allHeaders = Object.fromEntries(response.headers.entries());
-  const responseHeaders = includeResponseHeaders ? allHeaders : undefined;
+      const httpStatus = response.status;
+      const statusText = response.statusText;
+      const allHeaders = Object.fromEntries(response.headers.entries());
+      const responseHeaders = includeResponseHeaders ? allHeaders : undefined;
 
       // ホスト名が要求したものと異なる場合はログおよび結果に注記
-      let hostMismatchWarning: string | undefined;
-      try {
-        const requestedHost = new URL(url).host;
-        const responseUrl = (response as unknown as { url?: string }).url || url;
-        const responseUrlHost = new URL(responseUrl).host;
-        if (requestedHost !== responseUrlHost) {
-          hostMismatchWarning = `Response host mismatch: requested=${requestedHost} response=${responseUrlHost}`;
-          logger.warn(`${hostMismatchWarning} (requestId=${requestId})`);
-        }
-      } catch (e) {
-        // URL解析失敗は無視
+      const hostMismatchWarning = this.checkHostMismatch(url, response);
+      if (hostMismatchWarning) {
+        logger.warn(`${hostMismatchWarning} (requestId=${requestId})`);
       }
 
       // Content-Lengthからサイズとコンテントタイプ
-      const contentLength = response.headers.get('content-length');
-      const expectedSize = contentLength ? parseInt(contentLength, 10) : undefined;
-      const contentType = response.headers.get('content-type') || undefined;
+      const { expectedSize, contentType } = this.readMetaFromHeaders(response);
 
       // レスポンスボディを収集
       const { allData, fetchedSize } = await this.collectResponseData(
@@ -203,15 +178,14 @@ class FetchCacheManager {
         ...(options || {}),
       });
 
-      const result: FetchResult = {
-        ...(processedView as FetchResult),
-        status: httpStatus,
+      const result: FetchResult = this.buildResultFromView(processedView as FetchResult, {
+        httpStatus,
         statusText,
         contentType,
-        contentSize: expectedSize,
-        actualSize: fetchedSize,
+        expectedSize,
+        fetchedSize,
         responseHeaders: includeResponseHeaders ? responseHeaders : undefined,
-      };
+      });
 
       // 警告は data の先頭に含めないが、ヘッダに含める方法がないため、errorがない場合はstatusTextに付記
       if (!result.error && hostMismatchWarning) {
@@ -274,6 +248,75 @@ class FetchCacheManager {
         errorCode: errCode,
       };
     }
+  }
+
+  private async performFetch(
+    url: string,
+    method: string,
+    headers: Record<string, string> | undefined,
+    timeout: number,
+  ): Promise<Response> {
+    const controller = new AbortController();
+    let timeoutId: NodeJS.Timeout | undefined;
+    if (timeout > 0) {
+      timeoutId = setTimeout(() => controller.abort(), timeout);
+    }
+
+    try {
+      return await fetch(url, {
+        method,
+        headers,
+        signal: controller.signal,
+      });
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+
+  private readMetaFromHeaders(response: Response): {
+    expectedSize?: number;
+    contentType?: string;
+  } {
+    const contentLength = response.headers.get('content-length');
+    const expectedSize = contentLength ? parseInt(contentLength, 10) : undefined;
+    const contentType = response.headers.get('content-type') || undefined;
+    return { expectedSize, contentType };
+  }
+
+  private checkHostMismatch(requestUrl: string, response: Response): string | undefined {
+    try {
+      const requestedHost = new URL(requestUrl).host;
+      const responseUrl = (response as unknown as { url?: string }).url || requestUrl;
+      const responseUrlHost = new URL(responseUrl).host;
+      if (requestedHost !== responseUrlHost) {
+        return `Response host mismatch: requested=${requestedHost} response=${responseUrlHost}`;
+      }
+    } catch {
+      // ignore url parse error
+    }
+    return undefined;
+  }
+
+  private buildResultFromView(
+    view: FetchResult,
+    extra: {
+      httpStatus: number;
+      statusText: string;
+      contentType?: string;
+      expectedSize?: number;
+      fetchedSize: number;
+      responseHeaders?: Record<string, string>;
+    },
+  ): FetchResult {
+    return {
+      ...view,
+      status: extra.httpStatus,
+      statusText: extra.statusText,
+      contentType: extra.contentType,
+      contentSize: extra.expectedSize,
+      actualSize: extra.fetchedSize,
+      responseHeaders: extra.responseHeaders,
+    };
   }
 
   private async collectResponseData(
