@@ -131,10 +131,10 @@ class FetchCacheManager {
         if (timeoutId) clearTimeout(timeoutId);
       }
 
-      const httpStatus = response.status;
-      const statusText = response.statusText;
-      const allHeaders = Object.fromEntries(response.headers.entries());
-      const responseHeaders = includeResponseHeaders ? allHeaders : undefined;
+  const httpStatus = response.status;
+  const statusText = response.statusText;
+  const allHeaders = Object.fromEntries(response.headers.entries());
+  const responseHeaders = includeResponseHeaders ? allHeaders : undefined;
 
       // ホスト名が要求したものと異なる場合はログおよび結果に注記
       let hostMismatchWarning: string | undefined;
@@ -150,71 +150,20 @@ class FetchCacheManager {
         // URL解析失敗は無視
       }
 
-      // Content-Lengthからサイズを取得
+      // Content-Lengthからサイズとコンテントタイプ
       const contentLength = response.headers.get('content-length');
       const expectedSize = contentLength ? parseInt(contentLength, 10) : undefined;
       const contentType = response.headers.get('content-type') || undefined;
 
-      // レスポンスを読み取り
-      const reader = response.body?.getReader();
-      const chunks: Uint8Array[] = [];
-      let fetchedSize = 0;
-
-      if (reader) {
-        try {
-          let readDone = false;
-          while (!readDone) {
-            const { done, value } = await reader.read();
-            if (done) {
-              readDone = true;
-              break;
-            }
-
-            // ファイルサイズ制限チェック
-            if (fetchedSize + value.length > MAX_FILE_SIZE) {
-              logger.warn(
-                `File size limit exceeded for ${requestId}: ${fetchedSize + value.length} > ${MAX_FILE_SIZE}`,
-              );
-              // 制限まで読み取り
-              const remainingSize = MAX_FILE_SIZE - fetchedSize;
-              if (remainingSize > 0) {
-                const truncatedChunk = value.slice(0, remainingSize);
-                chunks.push(truncatedChunk);
-                fetchedSize += truncatedChunk.length;
-              }
-              break;
-            }
-
-            chunks.push(value);
-            fetchedSize += value.length;
-
-            // プログレス更新
-            const updatedEntry = this.cache.get(requestId);
-            if (updatedEntry) {
-              updatedEntry.fetchedSize = fetchedSize;
-              updatedEntry.expectedSize = expectedSize;
-              updatedEntry.httpStatus = httpStatus;
-              updatedEntry.statusText = statusText;
-              updatedEntry.responseHeaders = responseHeaders;
-            }
-          }
-        } finally {
-          try {
-            reader.releaseLock();
-          } catch (e) {
-            // ignore
-          }
-        }
-      }
-
-      // 全データを結合
-      const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-      const allData = new Uint8Array(totalLength);
-      let offset = 0;
-      for (const chunk of chunks) {
-        allData.set(chunk, offset);
-        offset += chunk.length;
-      }
+      // レスポンスボディを収集
+      const { allData, fetchedSize } = await this.collectResponseData(
+        response,
+        requestId,
+        responseHeaders,
+        expectedSize,
+        httpStatus,
+        statusText,
+      );
 
       // 総量制限をチェック（設定前に）
       this.enforceStorageLimit(fetchedSize);
@@ -248,74 +197,20 @@ class FetchCacheManager {
         `Cache updated. Total size: ${totalCacheSize} bytes (${(totalCacheSize / 1024 / 1024).toFixed(1)}MB), Entries: ${this.cache.size}`,
       );
 
-      // Content processing pipeline (processed text response by default)
-      const {
-        process = true,
-        summarize = true,
-        summaryMaxSentences = 3,
-        summaryMaxChars = 500,
-        search,
-        searchIsRegex = false,
-        caseSensitive = false,
-        context = 2,
-        before,
-        after,
-        maxMatches = 20,
-        includeRawPreview = false,
-        rawPreviewSize = 1024,
-      } = options || {};
-
-      const kind = detectKind(contentType);
-      let processedText = '';
-      let processed = false;
-      if (process) {
-        processedText = toText(Buffer.from(allData), kind);
-        processed = processedText.length > 0;
-      }
-      const textSize = processed ? processedText.length : undefined;
-      const textSlice = processed ? processedText.slice(0, outputSize) : '';
-      const isComplete = processed ? textSlice.length === processedText.length : true;
-
-      let summary: string | undefined;
-      if (processed && summarize) {
-        summary = summarizeText(processedText, {
-          maxSentences: summaryMaxSentences,
-          maxChars: summaryMaxChars,
-        });
-      }
-
-      let matches: GrepMatch[] | undefined;
-      if (processed && search) {
-        matches = grepLike(processedText, search, {
-          isRegex: searchIsRegex,
-          caseSensitive,
-          before,
-          after,
-          context,
-          maxMatches,
-        });
-      }
-
-      const rawPreview = includeRawPreview
-        ? Buffer.from(allData).slice(0, rawPreviewSize).toString('utf-8')
-        : undefined;
+      // 既存APIと整合する加工ビューを作成（再処理ロジックを再利用）
+      const processedView = this.getProcessedView(requestId, {
+        outputSize,
+        ...(options || {}),
+      });
 
       const result: FetchResult = {
-        requestId,
+        ...(processedView as FetchResult),
         status: httpStatus,
         statusText,
         contentType,
         contentSize: expectedSize,
         actualSize: fetchedSize,
-        processed,
-        textSize,
-        data: textSlice,
-        summary,
-        matches,
-        rawPreview,
-        isComplete,
         responseHeaders: includeResponseHeaders ? responseHeaders : undefined,
-        error: computedError,
       };
 
       // 警告は data の先頭に含めないが、ヘッダに含める方法がないため、errorがない場合はstatusTextに付記
@@ -379,6 +274,74 @@ class FetchCacheManager {
         errorCode: errCode,
       };
     }
+  }
+
+  private async collectResponseData(
+    response: Response,
+    requestId: string,
+    responseHeaders?: Record<string, string>,
+    expectedSize?: number,
+    httpStatus?: number,
+    statusText?: string,
+  ): Promise<{ allData: Uint8Array; fetchedSize: number }> {
+    const reader = response.body?.getReader();
+    const chunks: Uint8Array[] = [];
+    let fetchedSize = 0;
+
+    if (reader) {
+      try {
+        let readDone = false;
+        while (!readDone) {
+          const { done, value } = await reader.read();
+          if (done) {
+            readDone = true;
+            break;
+          }
+
+          if (fetchedSize + value.length > MAX_FILE_SIZE) {
+            logger.warn(
+              `File size limit exceeded for ${requestId}: ${fetchedSize + value.length} > ${MAX_FILE_SIZE}`,
+            );
+            const remainingSize = MAX_FILE_SIZE - fetchedSize;
+            if (remainingSize > 0) {
+              const truncatedChunk = value.slice(0, remainingSize);
+              chunks.push(truncatedChunk);
+              fetchedSize += truncatedChunk.length;
+            }
+            break;
+          }
+
+          chunks.push(value);
+          fetchedSize += value.length;
+
+          // プログレス更新
+          const updatedEntry = this.cache.get(requestId);
+          if (updatedEntry) {
+            updatedEntry.fetchedSize = fetchedSize;
+            updatedEntry.expectedSize = expectedSize;
+            updatedEntry.httpStatus = httpStatus;
+            updatedEntry.statusText = statusText;
+            updatedEntry.responseHeaders = responseHeaders;
+          }
+        }
+      } finally {
+        try {
+          reader.releaseLock();
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+
+    const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    const allData = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      allData.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    return { allData, fetchedSize };
   }
 
   getByRequestId(requestId: string): FetchCache | null {
