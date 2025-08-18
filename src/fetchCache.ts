@@ -4,6 +4,24 @@ import { MAX_FILE_SIZE, MAX_TOTAL_CACHE_SIZE } from './config';
 import type { GrepMatch } from './contentProcessing';
 import { detectKind, toText, summarizeText, grepLike } from './contentProcessing';
 
+// Shared options for processed view to avoid duplication
+export type ProcessViewOptions = {
+  outputSize?: number;
+  process?: boolean;
+  summarize?: boolean;
+  summaryMaxSentences?: number;
+  summaryMaxChars?: number;
+  search?: string;
+  searchIsRegex?: boolean;
+  caseSensitive?: boolean;
+  context?: number;
+  before?: number;
+  after?: number;
+  maxMatches?: number;
+  includeRawPreview?: boolean;
+  rawPreviewSize?: number;
+};
+
 // Using simple stderr logger
 
 // フェッチキャッシュのインターフェース
@@ -75,21 +93,7 @@ class FetchCacheManager {
     outputSize: number = 4096,
     timeout: number = 30000,
     includeResponseHeaders: boolean = false,
-    options?: {
-      process?: boolean;
-      summarize?: boolean;
-      summaryMaxSentences?: number;
-      summaryMaxChars?: number;
-      search?: string;
-      searchIsRegex?: boolean;
-      caseSensitive?: boolean;
-      context?: number;
-      before?: number;
-      after?: number;
-      maxMatches?: number;
-      includeRawPreview?: boolean;
-      rawPreviewSize?: number;
-    },
+    options?: ProcessViewOptions,
   ): Promise<FetchResult> {
     const requestId = uuidv4();
     const timestamp = new Date();
@@ -518,25 +522,7 @@ class FetchCacheManager {
   }
 
   // Apply processing pipeline to cached raw data and produce the same view as fetch
-  getProcessedView(
-    requestId: string,
-    options?: {
-      outputSize?: number;
-      process?: boolean;
-      summarize?: boolean;
-      summaryMaxSentences?: number;
-      summaryMaxChars?: number;
-      search?: string;
-      searchIsRegex?: boolean;
-      caseSensitive?: boolean;
-      context?: number;
-      before?: number;
-      after?: number;
-      maxMatches?: number;
-      includeRawPreview?: boolean;
-      rawPreviewSize?: number;
-    },
-  ): FetchResult | null {
+  getProcessedView(requestId: string, options?: ProcessViewOptions): FetchResult | null {
     const cache = this.getByRequestId(requestId);
     if (!cache) return null;
 
