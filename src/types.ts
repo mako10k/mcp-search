@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { MAX_FILE_SIZE } from './config';
 
 // get-search-result tool用のパラメータ（resultIdのみ）
 export const GetSearchResultParamsSchema = z.object({
