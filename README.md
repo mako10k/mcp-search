@@ -14,7 +14,7 @@ export GOOGLE_API_KEY="your_google_api_key"
 export GOOGLE_CX="your_google_cx_id"
 
 # Run the MCP server (STDIO mode is default)
-npx mcp-search
+npx @mako10k/mcp-search
 ```
 
 ### HTTP Mode (Alternative)
@@ -23,10 +23,10 @@ For HTTP-based integration:
 
 ```bash
 # Start in HTTP mode
-npx mcp-search --http
+npx @mako10k/mcp-search --http
 
 # Or with custom port
-npx mcp-search --http --port 8080
+npx @mako10k/mcp-search --http --port 8080
 ```
 
 ### MCP Client Configuration
@@ -35,7 +35,7 @@ npx mcp-search --http --port 8080
 ```json
 {
   "command": "npx",
-  "args": ["mcp-search"],
+  "args": ["@mako10k/mcp-search"],
   "type": "stdio"
 }
 ```
@@ -50,7 +50,7 @@ npx mcp-search --http --port 8080
 
 For command help:
 ```bash
-npx mcp-search --help
+npx @mako10k/mcp-search --help
 ```
 
 ### Command Options
@@ -58,7 +58,7 @@ npx mcp-search --help
 The `mcp-search` package can be run directly using npx without installation:
 
 ```bash
-npx mcp-search [options]
+npx @mako10k/mcp-search [options]
 ```
 
 **Transport Options:**
@@ -73,19 +73,19 @@ npx mcp-search [options]
 **Examples:**
 ```bash
 # STDIO mode (default)
-npx mcp-search
+npx @mako10k/mcp-search
 
 # HTTP mode
-npx mcp-search --http
+npx @mako10k/mcp-search --http
 
 # HTTP mode with custom port
-npx mcp-search --http --port 8080
+npx @mako10k/mcp-search --http --port 8080
 
 # One-liner with environment variables
-GOOGLE_API_KEY="your_key" GOOGLE_CX="your_cx" npx mcp-search
+GOOGLE_API_KEY="your_key" GOOGLE_CX="your_cx" npx @mako10k/mcp-search
 ```
 
-The server will start and listen for MCP connections on the specified port.
+Note: The server listens on a port only in HTTP mode. In STDIO mode (default), no port is used.
 
 ## Features
 
@@ -110,7 +110,7 @@ Add to your `.vscode/mcp.json`:
   "servers": {
     "mcp-search": {
       "command": "npx",
-      "args": ["mcp-search"],
+  "args": ["@mako10k/mcp-search"],
       "type": "stdio",
       "env": {
         "GOOGLE_API_KEY": "your_google_api_key",
@@ -130,7 +130,7 @@ Add to your Claude Desktop config:
   "mcpServers": {
     "mcp-search": {
       "command": "npx",
-      "args": ["mcp-search"],
+  "args": ["@mako10k/mcp-search"],
       "env": {
         "GOOGLE_API_KEY": "your_google_api_key",
         "GOOGLE_CX": "your_google_cx_id"
@@ -149,7 +149,7 @@ Add to your MCP configuration:
   "servers": {
     "search": {
       "command": "npx",
-      "args": ["mcp-search"],
+  "args": ["@mako10k/mcp-search"],
       "type": "stdio"
     }
   }
@@ -169,10 +169,10 @@ Add to your MCP configuration:
 2. Run the server:
    ```bash
    # STDIO mode (default - recommended for MCP clients)
-   npx mcp-search
+  npx @mako10k/mcp-search
    
    # OR HTTP mode (for custom integrations)
-   npx mcp-search --http
+  npx @mako10k/mcp-search --http
    ```
 
 ### Option 2: Local Development
@@ -210,7 +210,7 @@ Add to your MCP configuration:
   - Get from: https://developers.google.com/custom-search/v1/introduction
 - `GOOGLE_CX`: Your Google Custom Search Engine ID (required)
   - Create and get from: https://cse.google.com/
-- `PORT`: Server port (default: 3000)
+- `PORT`: Server port for HTTP mode only (default: 3000). Not used in STDIO mode.
 - `MAX_FILE_SIZE`: Maximum size per fetch request in bytes (default: 4MB = 4194304 bytes)
 - `MAX_TOTAL_CACHE_SIZE`: Maximum total cache size in bytes (default: 100MB = 104857600 bytes)
 
@@ -218,13 +218,14 @@ Note: These control internal cache limits, separate from model data window sizes
 
 ## Package Information
 
-This package is published to npm as `google-search-mcp` and can be used in the following ways:
+This package is published to npm as `@mako10k/mcp-search`.
 
-- **Direct execution with npx**: `npx mcp-search`
-- **Global installation**: `npm install -g google-search-mcp && mcp-search`
-- **Local dependency**: `npm install google-search-mcp`
+Ways to use:
+- Direct execution with npx: `npx @mako10k/mcp-search`
+- Global installation: `npm install -g @mako10k/mcp-search` then run `mcp-search`
+- Local dependency: `npm install @mako10k/mcp-search`
 
-The package includes TypeScript definitions and supports both CommonJS and ES modules.
+The CLI binary name is `mcp-search`. The package includes TypeScript definitions and supports both CommonJS and ES modules.
 
 ## Development
 
@@ -283,8 +284,8 @@ Fetch content from a specified URL with customizable options and caching.
 - `url` (string, required): Target URL to fetch
 - `method` (string, optional): HTTP method (GET, POST, PUT, DELETE, etc. - default: GET)
 - `headers` (object, optional): Custom HTTP headers
-- `windowSize` (number, optional): Response data window size in bytes for model consumption (max: 1MB, default: 4096)
-- `timeout` (number, optional): Request timeout in milliseconds (default: 30000)
+- `windowSize` (number, optional): Response data window size in bytes for model consumption (max: 32KB = 32768, default: 4096)
+- `timeout` (number, optional): Request timeout in milliseconds (min: 100, max: 600000, default: 30000)
 - `includeResponseHeaders` (boolean, optional): Include response headers in output (default: false)
 
 **Response:**
@@ -296,7 +297,11 @@ Fetch content from a specified URL with customizable options and caching.
 - `data` (string): Response content (up to windowSize bytes)
 - `isComplete` (boolean): Whether the entire response was fetched
 - `responseHeaders` (object, optional): Response headers if requested
-- `error` (string, optional): Error message for non-200 responses
+- `error` (string, optional): Error message for errors (network/timeout/HTTP>=400)
+- `errorCode` (string, optional): Platform error code for network/connection issues (e.g., ENOTFOUND, ECONNREFUSED, ETIMEDOUT)
+
+Notes:
+- On redirects, if the final response host differs from the requested host, statusText includes a warning suffix: `(warning: host mismatch)`.
 
 **Caching Behavior:**
 - All responses are cached regardless of status code

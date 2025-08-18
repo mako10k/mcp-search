@@ -1,12 +1,15 @@
 {
 	"servers": {
 		"mcp-search": {
-			"command": "npx",
-			"args": ["mcp-search"],
+			"command": "node",
+			"args": ["dist/index.js"],
 			"type": "stdio",
 			"env": {
 				"GOOGLE_API_KEY": "${input:google_api_key}",
 				"GOOGLE_CX": "${input:google_cx}"
+			},
+			"dev": {
+				"watch": "dist/**/*.js"
 			}
 		},
 		"mcp_assoc_memory": {
@@ -25,7 +28,7 @@
 		"mcp-shell-server": {
 			"command": "npx",
 			"args": [
-				"@mako10k/mcp-shell-server@2.1.4"
+				"@mako10k/mcp-shell-server@latest"
 			],
 			"env": {
 				"MCP_SHELL_DEFAULT_WORKDIR": "${input:default_workdir}",

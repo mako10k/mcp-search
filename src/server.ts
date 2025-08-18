@@ -160,23 +160,31 @@ export function createMcpServer(): McpServer {
             const validatedParams = FetchParamsSchema.parse(params);
             const result = await fetchUrl(validatedParams);
 
-            if ("error" in result && result.error) {
-                logger.info("Fetch error:", (result as any).message);
+            if ((result as any).error) {
+                const err = (result as any).error;
+                const httpStatus = (result as any).status ?? 0;
+                const errCode = (result as any).errorCode;
+                logger.info("Fetch error:", { error: err, status: httpStatus, code: errCode });
+                const details = [
+                    `Error: ${err}`,
+                    httpStatus ? `status=${httpStatus}` : undefined,
+                    errCode ? `code=${errCode}` : undefined,
+                ].filter(Boolean).join(" ");
                 return {
                     content: [{
                         type: "text",
-                        text: `Error: ${(result as any).message}`,
-                    }],
-                };
-            } else {
-                logger.info(`Fetch completed: ${(result as any).actualSize} bytes fetched`);
-                return {
-                    content: [{
-                        type: "text",
-                        text: JSON.stringify(result),
+                        text: details,
                     }],
                 };
             }
+
+            logger.info(`Fetch completed: ${(result as any).actualSize} bytes fetched`);
+            return {
+                content: [{
+                    type: "text",
+                    text: JSON.stringify(result),
+                }],
+            };
         }
     );
 

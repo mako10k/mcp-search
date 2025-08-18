@@ -52,11 +52,11 @@ export const FetchParamsSchema = z.object({
         .describe("Response data window size in bytes (max 32KB for model consumption)"),
     timeout: z.number()
         .int()
-        .min(1000)
-        .max(300000) // 5 minutes max
+        .min(100)
+        .max(600000) // 10 minutes max
         .optional()
         .default(30000)
-        .describe("Request timeout in milliseconds"),
+        .describe("Request timeout in milliseconds (min 100ms, max 600000ms)"),
     includeResponseHeaders: z.boolean()
         .optional()
         .default(false)

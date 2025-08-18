@@ -31,6 +31,7 @@ export interface FetchCache {
     responseHeaders?: Record<string, string>;
     data: Buffer;
     error?: string;
+    errorCode?: string;
 }
 
 // フェッチリクエストの結果
@@ -44,6 +45,7 @@ export interface FetchResult {
     isComplete: boolean;
     responseHeaders?: Record<string, string>;
     error?: string;
+    errorCode?: string;
 }
 
 // フェッチキャッシュマネージャー
@@ -95,20 +97,39 @@ class FetchCacheManager {
             logger.info(`Starting fetch: ${method} ${url}`);
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            let timeoutId: NodeJS.Timeout | undefined;
+            if (timeout > 0) {
+                timeoutId = setTimeout(() => controller.abort(), timeout);
+            }
 
-            const response = await fetch(url, {
-                method,
-                headers,
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
+            let response;
+            try {
+                response = await fetch(url, {
+                    method,
+                    headers,
+                    signal: controller.signal
+                });
+            } finally {
+                if (timeoutId) clearTimeout(timeoutId);
+            }
 
             const httpStatus = response.status;
             const statusText = response.statusText;
             const responseHeaders = includeResponseHeaders ? 
                 Object.fromEntries(response.headers.entries()) : undefined;
+
+            // ホスト名が要求したものと異なる場合はログおよび結果に注記
+            let hostMismatchWarning: string | undefined;
+            try {
+                const requestedHost = new URL(url).host;
+                const responseUrlHost = new URL((response as any).url || url).host;
+                if (requestedHost !== responseUrlHost) {
+                    hostMismatchWarning = `Response host mismatch: requested=${requestedHost} response=${responseUrlHost}`;
+                    logger.warn(`${hostMismatchWarning} (requestId=${requestId})`);
+                }
+            } catch (e) {
+                // URL解析失敗は無視
+            }
 
             // Content-Lengthからサイズを取得
             const contentLength = response.headers.get('content-length');
@@ -151,9 +172,13 @@ class FetchCacheManager {
                             updatedEntry.responseHeaders = responseHeaders;
                         }
                     }
-                } finally {
-                    reader.releaseLock();
-                }
+                    } finally {
+                        try {
+                            reader.releaseLock();
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
             }
 
             // 全データを結合
@@ -169,6 +194,8 @@ class FetchCacheManager {
             this.enforceStorageLimit(fetchedSize);
 
             // キャッシュエントリを完了状態で更新
+            const computedError = httpStatus >= 400 ? `HTTP ${httpStatus}: ${statusText}` : undefined;
+
             const finalEntry: FetchCache = {
                 ...cacheEntry,
                 status: httpStatus >= 200 && httpStatus < 300 ? "Completed" : "Error",
@@ -178,7 +205,7 @@ class FetchCacheManager {
                 fetchedSize,
                 responseHeaders,
                 data: Buffer.from(allData),
-                error: httpStatus >= 400 ? `HTTP ${httpStatus}: ${statusText}` : undefined
+                error: computedError
             };
 
             this.cache.set(requestId, finalEntry);
@@ -205,20 +232,44 @@ class FetchCacheManager {
                 data: Buffer.from(dataToReturn).toString('utf-8'),
                 isComplete,
                 responseHeaders: includeResponseHeaders ? responseHeaders : undefined,
-                error: httpStatus >= 400 ? `HTTP ${httpStatus}: ${statusText}` : undefined
+                error: computedError
             };
+
+            // 警告は data の先頭に含めないが、ヘッダに含める方法がないため、errorがない場合はstatusTextに付記
+            if (!result.error && hostMismatchWarning) {
+                result.statusText = `${statusText} (warning: host mismatch)`;
+            }
 
             logger.info(`Fetch completed: ${requestId}, status: ${httpStatus}, size: ${fetchedSize}`);
             return result;
 
         } catch (error: any) {
-            logger.error(`Fetch error for ${requestId}:`, error.message);
+            let errMsg: string;
+            let errCode: string | undefined;
+            if (error?.name === 'AbortError') {
+                errMsg = `Fetch aborted by timeout after ${timeout} ms`;
+                errCode = 'ETIMEDOUT';
+            } else if (typeof error === 'string') {
+                errMsg = error;
+            } else if (error?.message) {
+                errMsg = error.message;
+            } else if (error?.cause?.message) {
+                errMsg = error.cause.message;
+            } else {
+                errMsg = 'Unknown fetch error';
+            }
+
+            // 代表的なコードを抽出（undici/Nodeのcauseや本体に付与されることがある）
+            errCode = errCode || error?.code || error?.errno || error?.cause?.code || error?.cause?.errno;
+
+            logger.error(`Fetch error for ${requestId}: ${errMsg}`);
 
             // エラー状態でキャッシュを更新
             const errorEntry: FetchCache = {
                 ...cacheEntry,
                 status: "Error",
-                error: error.message,
+                error: errMsg,
+                errorCode: errCode,
                 data: Buffer.alloc(0)
             };
 
@@ -231,7 +282,8 @@ class FetchCacheManager {
                 actualSize: 0,
                 data: "",
                 isComplete: true,
-                error: error.message
+                error: errMsg,
+                errorCode: errCode
             };
         }
     }

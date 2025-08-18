@@ -35,7 +35,7 @@ Transport Modes:
 Environment Variables:
   GOOGLE_API_KEY           Google Custom Search API key (required)
   GOOGLE_CX               Google Custom Search Engine ID (required)
-  PORT                    Server port (default: 3000)
+  PORT                    Server port (HTTP mode only; default: 3000)
   MAX_FILE_SIZE           Max file size per fetch (default: 4MB)
   MAX_TOTAL_CACHE_SIZE    Max total cache size (default: 100MB)
 
