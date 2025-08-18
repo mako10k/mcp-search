@@ -1,20 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
-import winston from "winston";
+import { logger } from "./logger";
 import { MAX_FILE_SIZE, MAX_TOTAL_CACHE_SIZE } from "./config";
 import { detectKind, toText, summarizeText, grepLike, GrepMatch } from "./contentProcessing";
 
-const logger = winston.createLogger({
-    level: "info",
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-    ),
-    transports: [
-        new winston.transports.Console({
-            format: winston.format.simple(),
-        }),
-    ],
-});
+// Using simple stderr logger
 
 // フェッチキャッシュのインターフェース
 export interface FetchCache {

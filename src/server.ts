@@ -12,20 +12,9 @@ import {
     GetFetchCacheParamsSchema
 } from "./types";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import winston from "winston";
+import { logger } from "./logger";
 
-const logger = winston.createLogger({
-    level: "info",
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-    ),
-    transports: [
-        new winston.transports.Console({
-            format: winston.format.simple(),
-        }),
-    ],
-});
+// use simple stderr logger
 
 export function createMcpServer(): McpServer {
     const server = new McpServer({

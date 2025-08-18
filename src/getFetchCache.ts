@@ -1,19 +1,8 @@
 import { fetchCacheManager } from "./fetchCache";
 import { GetFetchCacheParams } from "./types";
-import winston from "winston";
+import { logger } from "./logger";
 
-const logger = winston.createLogger({
-    level: "info",
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-    ),
-    transports: [
-        new winston.transports.Console({
-            format: winston.format.simple(),
-        }),
-    ],
-});
+// using simple stderr logger
 
 export async function getFetchCache(params: GetFetchCacheParams) {
     const {

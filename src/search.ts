@@ -1,7 +1,7 @@
 import axios from "axios";
 import dotenv from "dotenv";
 import { z } from "zod";
-import winston from "winston";
+import { logger } from "./logger";
 import { cacheManager, SearchResponse } from "./cache";
 
 dotenv.config();
@@ -35,18 +35,7 @@ const SearchParamsSchema = z.object({
         .describe("Specify the dominant color of images to return (e.g., black, white, red)."),
 });
 
-const logger = winston.createLogger({
-    level: "info",
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-    ),
-    transports: [
-        new winston.transports.Console({
-            format: winston.format.simple(),
-        }),
-    ],
-});
+// using simple stderr logger
 
 export async function searchEngine(params: z.infer<typeof SearchParamsSchema>): Promise<SearchResponse | { error: boolean; status?: number; message: string }> {
     const { query, language, region, numResults, startIndex, imageSearch, imageSize, imageType, imageColor } = params;
