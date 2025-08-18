@@ -1,75 +1,68 @@
 {
-	"servers": {
-		"mcp-search": {
-			"command": "node",
-			"args": ["dist/index.js"],
-			"type": "stdio",
-			"env": {
-				"GOOGLE_API_KEY": "${input:google_api_key}",
-				"GOOGLE_CX": "${input:google_cx}"
-			},
-			"dev": {
-				"watch": "dist/**/*.js"
-			}
-		},
-		"mcp_assoc_memory": {
-			"type": "stdio",
-			"command": "python",
-			"args": [
-				"-m",
-				"mcp_assoc_memory.server",
-				"--config",
-				"config.json"
-			],
-			"env": {
-				"MCP_LOG_LEVEL": "${input:mcp_log_level}"
-			}
-		},
-		"mcp-shell-server": {
-			"command": "npx",
-			"args": [
-				"@mako10k/mcp-shell-server@latest"
-			],
-			"env": {
-				"MCP_SHELL_DEFAULT_WORKDIR": "${input:default_workdir}",
-				"MCP_SHELL_ALLOWED_WORKDIRS": "${input:default_workdir}",
-				"MCP_SHELL_SECURITY_MODE": "${input:security_mode}",
-				"MCP_SHELL_MAX_EXECUTION_TIME": 300,
-				"MCP_SHELL_MAX_MEMORY_MB": 1024
-			},
-			"type": "stdio"
-		}
-	},
-	"inputs": [
-		{
-			"id": "google_api_key",
-			"type": "promptString",
-			"description": "Google API Key"
-		},
-		{
-			"id": "google_cx",
-			"type": "promptString",
-			"description": "Google Custom Search Engine ID"
-		},
-		{
-			"id": "mcp_log_level",
-			"type": "promptString",
-			"description": "MCP Log Level"
-		},
-		{
-			"id": "default_workdir",
-			"type": "promptString",
-			"description": "Default Working Directory"
-		},
-		{
-			"id": "default_workdir",
-			"type": "promptString",
-			"description": "Default Working Directory"
-		},
-		{
-			"id": "security_mode",
-			"type": "promptString",
-			"description": "Security Mode"
-		}
-	]
+  "servers": {
+    "mcp-search": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "type": "stdio",
+      "env": {
+        "GOOGLE_API_KEY": "${input:google_api_key}",
+        "GOOGLE_CX": "${input:google_cx}"
+      },
+      "dev": {
+        "watch": "dist/**/*.js"
+      }
+    },
+    "mcp_assoc_memory": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mcp_assoc_memory.server", "--config", "config.json"],
+      "env": {
+        "MCP_LOG_LEVEL": "${input:mcp_log_level}"
+      }
+    },
+    "mcp-shell-server": {
+      "command": "npx",
+      "args": ["@mako10k/mcp-shell-server@latest"],
+      "env": {
+        "MCP_SHELL_DEFAULT_WORKDIR": "${input:default_workdir}",
+        "MCP_SHELL_ALLOWED_WORKDIRS": "${input:default_workdir}",
+        "MCP_SHELL_SECURITY_MODE": "${input:security_mode}",
+        "MCP_SHELL_MAX_EXECUTION_TIME": 300,
+        "MCP_SHELL_MAX_MEMORY_MB": 1024
+      },
+      "type": "stdio"
+    }
+  },
+  "inputs": [
+    {
+      "id": "google_api_key",
+      "type": "promptString",
+      "description": "Google API Key"
+    },
+    {
+      "id": "google_cx",
+      "type": "promptString",
+      "description": "Google Custom Search Engine ID"
+    },
+    {
+      "id": "mcp_log_level",
+      "type": "promptString",
+      "description": "MCP Log Level"
+    },
+    {
+      "id": "default_workdir",
+      "type": "promptString",
+      "description": "Default Working Directory"
+    },
+    {
+      "id": "default_workdir",
+      "type": "promptString",
+      "description": "Default Working Directory"
+    },
+    {
+      "id": "security_mode",
+      "type": "promptString",
+      "description": "Security Mode"
+    }
+  ]
 }

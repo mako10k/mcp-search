@@ -2,4 +2,4 @@
 
 This project implements Google search features using the MCP framework. All code should follow MCP conventions and interact with the Google Custom Search API.
 
-For command execution, always use functions prefixed with mcp_shell_server_. Avoid run_in_terminal due to known issues.
+For command execution, always use functions prefixed with mcp*shell_server*. Avoid run_in_terminal due to known issues.

@@ -32,6 +32,7 @@ npx @mako10k/mcp-search --http --port 8080
 ### MCP Client Configuration
 
 **For STDIO transport (recommended):**
+
 ```json
 {
   "command": "npx",
@@ -41,6 +42,7 @@ npx @mako10k/mcp-search --http --port 8080
 ```
 
 **For HTTP transport:**
+
 ```json
 {
   "url": "http://localhost:3000/mcp",
@@ -49,6 +51,7 @@ npx @mako10k/mcp-search --http --port 8080
 ```
 
 For command help:
+
 ```bash
 npx @mako10k/mcp-search --help
 ```
@@ -62,15 +65,18 @@ npx @mako10k/mcp-search [options]
 ```
 
 **Transport Options:**
+
 - Default: STDIO mode (recommended for MCP clients)
 - `--http`: Enable HTTP mode with /mcp endpoint
 
 **Configuration Options:**
+
 - `--port <number>`: Specify the server port for HTTP mode (default: 3000)
 - `--help`: Show help information
 - `--version`: Show version information
 
 **Examples:**
+
 ```bash
 # STDIO mode (default)
 npx @mako10k/mcp-search
@@ -90,11 +96,13 @@ Note: The server listens on a port only in HTTP mode. In STDIO mode (default), n
 ## Features
 
 ### Google Search Tools
+
 - **google-search**: Execute Google Custom Search with caching
 - **list-search-cache**: List cached search history with keyword filtering and pagination
 - **get-search-result**: Retrieve individual search results by ID
 
 ### Web Fetch Tools
+
 - **fetch**: Fetch web content with automatic content processing, optional summarization, grep-like search, and caching
 - **list-fetch-cache**: List cached fetch requests
 - **get-fetch-cache**: Retrieve cached fetch data either as processed text view or raw byte chunks
@@ -110,7 +118,7 @@ Add to your `.vscode/mcp.json`:
   "servers": {
     "mcp-search": {
       "command": "npx",
-  "args": ["@mako10k/mcp-search"],
+      "args": ["@mako10k/mcp-search"],
       "type": "stdio",
       "env": {
         "GOOGLE_API_KEY": "your_google_api_key",
@@ -130,7 +138,7 @@ Add to your Claude Desktop config:
   "mcpServers": {
     "mcp-search": {
       "command": "npx",
-  "args": ["@mako10k/mcp-search"],
+      "args": ["@mako10k/mcp-search"],
       "env": {
         "GOOGLE_API_KEY": "your_google_api_key",
         "GOOGLE_CX": "your_google_cx_id"
@@ -149,7 +157,7 @@ Add to your MCP configuration:
   "servers": {
     "search": {
       "command": "npx",
-  "args": ["@mako10k/mcp-search"],
+      "args": ["@mako10k/mcp-search"],
       "type": "stdio"
     }
   }
@@ -161,23 +169,26 @@ Add to your MCP configuration:
 ### Option 1: Using npx (Recommended)
 
 1. Set up environment variables:
+
    ```bash
    export GOOGLE_API_KEY="your_google_api_key"
    export GOOGLE_CX="your_google_cx_id"
    ```
 
 2. Run the server:
+
    ```bash
    # STDIO mode (default - recommended for MCP clients)
-  npx @mako10k/mcp-search
-   
+   npx @mako10k/mcp-search
+
    # OR HTTP mode (for custom integrations)
-  npx @mako10k/mcp-search --http
+   npx @mako10k/mcp-search --http
    ```
 
 ### Option 2: Local Development
 
 1. Clone and install dependencies:
+
    ```bash
    git clone https://github.com/mako10k/mcp-search
    cd mcp-search
@@ -185,11 +196,13 @@ Add to your MCP configuration:
    ```
 
 2. Set up environment variables by copying the example file:
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Then edit `.env` with your actual values:
+
    ```
    GOOGLE_API_KEY=your_actual_google_api_key
    GOOGLE_CX=your_actual_google_cx_id
@@ -221,6 +234,7 @@ Note: These control internal cache limits, separate from model data window sizes
 This package is published to npm as `@mako10k/mcp-search`.
 
 Ways to use:
+
 - Direct execution with npx: `npx @mako10k/mcp-search`
 - Global installation: `npm install -g @mako10k/mcp-search` then run `mcp-search`
 - Local dependency: `npm install @mako10k/mcp-search`
@@ -230,6 +244,7 @@ The CLI binary name is `mcp-search`. The package includes TypeScript definitions
 ## Development
 
 Use the following command for development:
+
 ```bash
 npm run dev
 ```
@@ -239,9 +254,11 @@ npm run dev
 ### Google Search Tools
 
 #### google-search
+
 Execute a Google Custom Search query and cache the results.
 
 **Parameters:**
+
 - `query` (string, required): Search query
 - `language` (string, optional): Language for search results (ISO 639-1)
 - `region` (string, optional): Region for search results (ISO 3166-1 alpha-2)
@@ -251,36 +268,45 @@ Execute a Google Custom Search query and cache the results.
 - `imageSize`, `imageType`, `imageColor` (string, optional): Image search filters
 
 **Response:**
+
 - Search summary with searchId, resultCount, timestamp, and result previews
 - Full results cached for detailed retrieval
 
 #### list-search-cache
+
 List cached search queries with filtering and pagination.
 
 **Parameters:**
+
 - `keyword` (string, optional): Filter searches by keyword (case-insensitive)
 - `page` (number, optional): Page number (default: 1)
 - `limit` (number, optional): Results per page (1-100, default: 10)
 
 **Response:**
+
 - Array of search metadata (searchId, query, timestamp, resultCount, expiresAt)
 - Pagination information (totalCount, currentPage, totalPages, hasNextPage, hasPreviousPage)
 
 #### get-search-result
+
 Retrieve a specific search result by result ID.
 
 **Parameters:**
+
 - `resultId` (string, required): Unique identifier for the search result
 
 **Response:**
+
 - Complete search result data including title, link, snippet, and raw data
 
 ### Web Fetch Tools
 
 #### fetch (Breaking changes in 2.1.0)
+
 Fetch content with automatic processing and optional search/summary. By default, returns processed text (not raw HTML) based on Content-Type.
 
 **Parameters:**
+
 - `url` (string, required): Target URL to fetch
 - `method` (string, optional): HTTP method (default: GET)
 - `headers` (object, optional): Custom HTTP headers
@@ -302,6 +328,7 @@ Fetch content with automatic processing and optional search/summary. By default,
 - `rawPreviewSize` (number, optional): Raw preview size in bytes (default: 1024)
 
 **Response:**
+
 - `requestId` (string): Unique identifier for this fetch request
 - `status` (number): HTTP status code
 - `statusText` (string): HTTP status message
@@ -320,23 +347,28 @@ Fetch content with automatic processing and optional search/summary. By default,
 - `errorCode` (string, optional): Platform error code (e.g., ENOTFOUND, ECONNREFUSED, ETIMEDOUT)
 
 Notes:
+
 - On redirects where the final host differs from the requested host, `statusText` includes `(warning: host mismatch)`.
 
 **Caching Behavior:**
+
 - All responses are cached regardless of status code
 - Cache includes full response data and metadata
 - Cache entries have 1-hour expiry with LRU eviction
 - Non-200 responses are cached with error information
 
 #### list-fetch-cache
+
 List cached fetch requests with their status and progress information.
 
 **Parameters:**
+
 - `requestId` (string, optional): Filter by specific request ID
 - `page` (number, optional): Page number (default: 1)
 - `limit` (number, optional): Results per page (1-100, default: 10)
 
 **Response:**
+
 - Array of fetch metadata:
   - `requestId` (string): Unique request identifier
   - `url` (string): Original request URL
@@ -350,9 +382,11 @@ List cached fetch requests with their status and progress information.
 - Pagination information
 
 #### get-fetch-cache (Updated in 2.1.0)
+
 Retrieve cached fetch data in two modes: processed text view or raw byte chunks.
 
 **Parameters:**
+
 - `requestId` (string, required): Request ID to retrieve
 - `mode` (string, optional): `"text"` (default) or `"rawChunk"`
 - For `mode="rawChunk"`:
@@ -366,11 +400,14 @@ Retrieve cached fetch data in two modes: processed text view or raw byte chunks.
 **Response (mode=text):** Same shape as `fetch` response (processed text, summary, matches, etc.)
 
 **Response (mode=rawChunk):**
+
 - `requestId`, `url`, `httpStatus`, `contentSize`, `startPosition`, `dataSize`, `data`, `hasMore`, `responseHeaders`, `metadata`
 
 Notes:
+
 - Cache stores raw data; processed view is computed on retrieval.
 
 **Breaking changes:**
+
 - `fetch.data` is now processed text by default (previously raw slice)
 - `windowSize` is replaced with `outputSize`

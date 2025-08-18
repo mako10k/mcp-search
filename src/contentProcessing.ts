@@ -12,9 +12,7 @@ export function detectKind(contentType?: string | null): DetectedKind {
   return 'binary';
 }
 
-export function bufferToUtf8(buffer: Buffer): string {
-  return buffer.toString('utf-8');
-}
+// Removed unused helper bufferToUtf8 (dead code)
 
 export function toText(buffer: Buffer, kind: DetectedKind): string {
   try {
@@ -49,16 +47,16 @@ export function toText(buffer: Buffer, kind: DetectedKind): string {
 
 export function summarizeText(
   text: string,
-  opts: { maxSentences: number; maxChars: number }
+  opts: { maxSentences: number; maxChars: number },
 ): string {
   const { maxSentences, maxChars } = opts;
   if (!text) return '';
 
   // Simple sentence split supporting JP punctuation
   const parts = text
-    .split(/(?<=[。．！？!\?])\s+|\n+/)
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
+    .split(/(?<=[。．！？!?])\s+|\n+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 
   const selected: string[] = [];
   for (const s of parts) {
@@ -85,6 +83,38 @@ export type GrepMatch = {
   ranges?: Array<{ start: number; end: number }>;
 };
 
+function collectRanges(
+  lineText: string,
+  re: RegExp,
+  maxMatches: number,
+): Array<{ start: number; end: number }> {
+  const ranges: Array<{ start: number; end: number }> = [];
+  if (!lineText.length || maxMatches <= 0) return ranges;
+  re.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(lineText)) && ranges.length < 2000) {
+    const start = m.index;
+    const end = start + (m[0]?.length ?? 0);
+    if (end > start) ranges.push({ start, end });
+    if (m.index === re.lastIndex) re.lastIndex++; // avoid zero-length loops
+  }
+  return ranges;
+}
+
+function buildPreview(
+  lines: string[],
+  idx: number,
+  before: number,
+  after: number,
+): { beforeLines: string[]; afterLines: string[]; preview: string } {
+  const startIdx = Math.max(0, idx - before);
+  const endIdx = Math.min(lines.length - 1, idx + after);
+  const beforeLines = lines.slice(startIdx, idx);
+  const afterLines = lines.slice(idx + 1, endIdx + 1);
+  const preview = [...beforeLines, lines[idx], ...afterLines].join('\n');
+  return { beforeLines, afterLines, preview };
+}
+
 export function grepLike(
   text: string,
   pattern: string,
@@ -95,7 +125,7 @@ export function grepLike(
     after?: number;
     context?: number;
     maxMatches?: number;
-  } = {}
+  } = {},
 ): GrepMatch[] {
   const {
     isRegex = false,
@@ -125,27 +155,10 @@ export function grepLike(
   for (let i = 0; i < lines.length; i++) {
     const lineText = lines[i];
     re.lastIndex = 0;
-    const found = re.test(lineText);
-    if (!found) continue;
+    if (!re.test(lineText)) continue;
 
-    // collect ranges
-    const ranges: Array<{ start: number; end: number }> = [];
-    if (lineText.length && maxMatches > 0) {
-      re.lastIndex = 0;
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(lineText)) && ranges.length < 2000) {
-        const start = m.index;
-        const end = start + (m[0]?.length ?? 0);
-        if (end > start) ranges.push({ start, end });
-        if (m.index === re.lastIndex) re.lastIndex++; // avoid zero-length infinite loops
-      }
-    }
-
-    const startIdx = Math.max(0, i - b);
-    const endIdx = Math.min(lines.length - 1, i + a);
-    const beforeLines = lines.slice(startIdx, i);
-    const afterLines = lines.slice(i + 1, endIdx + 1);
-    const preview = [...beforeLines, lineText, ...afterLines].join('\n');
+    const ranges = collectRanges(lineText, re, maxMatches);
+    const { beforeLines, afterLines, preview } = buildPreview(lines, i, b, a);
 
     matches.push({
       line: i + 1,

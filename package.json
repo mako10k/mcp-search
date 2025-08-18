@@ -1,71 +1,71 @@
 {
-    "name": "@mako10k/mcp-search",
-    "version": "2.1.0",
-    "description": "A Model Context Protocol (MCP) server for Google Custom Search and Web Fetch with comprehensive caching capabilities. Supports both STDIO and HTTP transports.",
-    "main": "dist/index.js",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/mako10k/mcp-search.git"
-    },
-    "homepage": "https://github.com/mako10k/mcp-search",
-    "bugs": {
-        "url": "https://github.com/mako10k/mcp-search/issues"
-    },
-    "bin": {
-        "mcp-search": "dist/cli.js"
-    },
-    "publishConfig": {
-        "access": "public"
-    },
-    "files": [
-        "dist/**/*",
-        "README.md",
-        ".env.example"
-    ],
-    "keywords": [
-        "mcp",
-        "google-search",
-        "web-fetch",
-        "cache",
-        "model-context-protocol"
-    ],
-    "scripts": {
-        "start": "node dist/index.js",
-        "build": "tsc",
-        "dev": "ts-node src/index.ts",
-        "typecheck": "tsc --noEmit",
-        "lint": "eslint . --ext .ts",
-        "lint:fix": "eslint . --ext .ts --fix",
-        "format": "prettier --write .",
-        "format:check": "prettier --check .",
-        "deadcode": "ts-prune -p tsconfig.json",
-        "duplicates": "jscpd --reporters console --threshold 0 --silent",
-        "depcheck": "depcheck",
-        "prepublishOnly": "npm run build"
-    },
-    "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.12.1",
-        "@types/uuid": "^10.0.0",
-        "axios": "^1.4.0",
-        "dotenv": "^16.5.0",
-        "express": "^5.1.0",
-        "html-to-text": "^9.0.5",
-        "uuid": "^11.1.0",
-        "zod": "^3.25.51"
-    },
-    "devDependencies": {
-        "@types/express": "^5.0.2",
-        "@typescript-eslint/eslint-plugin": "^6.21.0",
-        "@typescript-eslint/parser": "^6.21.0",
-        "depcheck": "^1.4.7",
-        "eslint": "^8.57.1",
-        "eslint-config-prettier": "^9.1.2",
-        "eslint-plugin-prettier": "^5.5.4",
-        "eslint-plugin-sonarjs": "^0.24.0",
-        "jscpd": "^3.5.10",
-        "prettier": "^3.6.2",
-        "ts-node": "^10.9.1",
-        "ts-prune": "^0.10.3",
-        "typescript": "^5.2.2"
-    }
+  "name": "@mako10k/mcp-search",
+  "version": "2.1.0",
+  "description": "A Model Context Protocol (MCP) server for Google Custom Search and Web Fetch with comprehensive caching capabilities. Supports both STDIO and HTTP transports.",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mako10k/mcp-search.git"
+  },
+  "homepage": "https://github.com/mako10k/mcp-search",
+  "bugs": {
+    "url": "https://github.com/mako10k/mcp-search/issues"
+  },
+  "bin": {
+    "mcp-search": "dist/cli.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    ".env.example"
+  ],
+  "keywords": [
+    "mcp",
+    "google-search",
+    "web-fetch",
+    "cache",
+    "model-context-protocol"
+  ],
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "deadcode": "ts-prune -p tsconfig.json",
+    "duplicates": "jscpd --reporters console --threshold 0 --silent",
+    "depcheck": "depcheck",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@types/uuid": "^10.0.0",
+    "axios": "^1.4.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "html-to-text": "^9.0.5",
+    "uuid": "^11.1.0",
+    "zod": "^3.25.51"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "depcheck": "^1.4.7",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-sonarjs": "^0.24.0",
+    "jscpd": "^3.5.10",
+    "prettier": "^3.6.2",
+    "ts-node": "^10.9.1",
+    "ts-prune": "^0.10.3",
+    "typescript": "^5.2.2"
+  }
 }
